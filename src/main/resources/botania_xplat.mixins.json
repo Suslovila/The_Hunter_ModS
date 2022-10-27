@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.way.suslovila.item.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AccessorHopperBlockEntity"
+
+  ],
+  "client": [
+
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "botania.refmap.json"
+}

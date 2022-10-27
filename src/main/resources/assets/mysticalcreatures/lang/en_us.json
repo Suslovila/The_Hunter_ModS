@@ -1,0 +1,10 @@
+{
+  "item.mysticalcreatures.hunter_spawn_egg": "Hunter Spawn Egg",
+  "item.mysticalcreatures.trap_spawn_egg": "Trap Spawn Egg",
+  "item.mysticalcreatures.commonbackpack": "Hunter Bag",
+  "death.attack.mysticalcreaturesshadow_trap" : "%1$s was killed by Shadow Trap",
+  "death.attack.mysticalcreaturespressure" : "%1$s was clamped",
+  "effect.mysticalcreatures.ender_seal": "Ender Seal",
+  "effect.mysticalcreatures.ender_fracture": "Ender Fracture",
+  "death.attack.fracture" : "%1$s was pressed from inside"
+}
