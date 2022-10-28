@@ -33,17 +33,11 @@ public class ParticleHandler {
         }
     });
 
-    public static final RegistryObject<ParticleType<DissolationParticles.DissolationParticleData>> DISSOLATION_PARTICLE = REG.register("dissolation_particles", () -> new ParticleType<DissolationParticles.DissolationParticleData>(false, DissolationParticles.DissolationParticleData.DESERIALIZER) {
-        @Override
-        public Codec<DissolationParticles.DissolationParticleData> codec() {
-            return DissolationParticles.DissolationParticleData.CODEC(DISSOLATION_PARTICLE.get());
-        }
-    });
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void registerParticles(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particleEngine.register(ParticleHandler.TAIL_PARTICLE.get(), TailBlackParticles.Provider::new);
 //        Minecraft.getInstance().particleEngine.register(ParticleHandler.HEAD_PARTICLE.get(), NewHeadBlackParticles.Provider::new);
-        Minecraft.getInstance().particleEngine.register(ParticleHandler.DISSOLATION_PARTICLE.get(), DissolationParticles.Provider::new);
 
     }
         public static void register(IEventBus eventBus) {

@@ -19,8 +19,10 @@ public class ModParticles {
             PARTICLE_TYPES.register("test_black_particles", () -> new SimpleParticleType(true));
 //   public static final RegistryObject<SimpleParticleType> TAIL_BLACK_PARTICLES =
 //           PARTICLE_TYPES.register("tail_black_particles", () -> new SimpleParticleType(true));
-//public static final RegistryObject<BlockParticleOption> DISSOLATION_PARTICLES =
-//        PARTICLE_TYPES.register("dissolation_particles", () -> new BlockParticleOption());
+public static final RegistryObject<SimpleParticleType> DISSOLATION_PARTICLES =
+        PARTICLE_TYPES.register("dissolation_particles", () -> new SimpleParticleType(true));
+    public static final RegistryObject<SimpleParticleType> DISSOLATION_LIGHTNING_PARTICLES =
+            PARTICLE_TYPES.register("dissolation_lightning_particles", () -> new SimpleParticleType(true));
 
     public static void register(IEventBus eventBus) {
         PARTICLE_TYPES.register(eventBus);

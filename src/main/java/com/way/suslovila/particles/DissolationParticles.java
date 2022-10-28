@@ -19,24 +19,25 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.Locale;
+import java.util.Random;
 
 public class DissolationParticles extends TextureSheetParticle {
     private final float uo;
     private final float vo;
-
+    Random random = new Random();
     public DissolationParticles(ClientLevel level, double xCoord, double yCoord, double zCoord,
                                  double xd, double yd, double zd, double MaxSizeOfParticle, int TimeOfLife) {
         super(level, xCoord, yCoord, zCoord, xd, yd, zd);
-        this.friction = 0.8F;
+        this.friction = 1F;
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
         this.gravity = 0;
-        this.quadSize *= 1.0D;
+        this.quadSize *= random.nextDouble(0.1D,1);
         BlockPos blockPos = new BlockPos(xCoord, yCoord, zCoord);
         BlockState blockState = level.getBlockState(blockPos);
         this.setSprite(Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getParticleIcon(blockState));
-        this.lifetime = 60;
+        this.lifetime = 50;
         //this.setSpriteFromAge(spriteSet);
 
         int i = Minecraft.getInstance().getBlockColors().getColor(blockState, level, blockPos, 0);
@@ -85,85 +86,17 @@ public class DissolationParticles extends TextureSheetParticle {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static class Provider implements ParticleProvider<DissolationParticles.DissolationParticleData> {
-        private final SpriteSet spriteSet;
+    public static class Provider implements ParticleProvider<SimpleParticleType> {
+        private final SpriteSet sprites;
 
         public Provider(SpriteSet spriteSet) {
-            this.spriteSet = spriteSet;
+            this.sprites = spriteSet;
         }
 
-        @Override
-        public Particle createParticle(DissolationParticles.DissolationParticleData typeIn, ClientLevel worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            DissolationParticles particle = new DissolationParticles(worldIn, x, y, z, xSpeed, ySpeed, zSpeed, typeIn.getMaxSizeOfParticle(), typeIn.getParticleLifeTime());
-            particle.pickSprite(spriteSet);
-            return particle;
+        public Particle createParticle(SimpleParticleType particleType, ClientLevel level,
+                                       double x, double y, double z,
+                                       double dx, double dy, double dz) {
+            return new DissolationParticles(level, x, y, z, dx, dy, dz, 4, 4);
         }
-    }
-
-
-
-    public static class DissolationParticleData implements ParticleOptions {
-        public static final ParticleOptions.Deserializer<DissolationParticles.DissolationParticleData> DESERIALIZER = new ParticleOptions.Deserializer<DissolationParticles.DissolationParticleData>() {
-            public DissolationParticles.DissolationParticleData fromCommand(ParticleType<DissolationParticles.DissolationParticleData> particleTypeIn, StringReader reader) throws CommandSyntaxException {
-                reader.expect(' ');
-                double MaxSizeOfParticle = (float) reader.readDouble();
-                reader.expect(' ');
-                int LifeTime = reader.readInt();
-                return new DissolationParticles.DissolationParticleData(MaxSizeOfParticle, LifeTime);
-            }
-
-            public DissolationParticles.DissolationParticleData fromNetwork(ParticleType<DissolationParticles.DissolationParticleData> particleTypeIn, FriendlyByteBuf buffer) {
-                return new DissolationParticles.DissolationParticleData(buffer.readDouble(), buffer.readInt());
-            }
-        };
-
-        private final double MaxSizeOfParticle;
-        private final int LifeTime;
-
-        public DissolationParticleData(double MaxSizeOfParticle, int LifeTime) {
-            this.MaxSizeOfParticle = MaxSizeOfParticle;
-            this.LifeTime = LifeTime;
-        }
-
-        @Override
-        public void writeToNetwork(FriendlyByteBuf buffer) {
-            buffer.writeDouble(this.MaxSizeOfParticle);
-            buffer.writeInt(this.LifeTime);
-        }
-
-        @SuppressWarnings("deprecation")
-        @Override
-        public String writeToString() {
-            return String.format(Locale.ROOT, "%s %.2f %b", Registry.PARTICLE_TYPE.getKey(this.getType()),
-                    this.MaxSizeOfParticle, this.LifeTime);
-        }
-
-        @Override
-        public ParticleType<DissolationParticleData> getType() {
-            return ParticleHandler.DISSOLATION_PARTICLE.get();
-        }
-
-        @OnlyIn(Dist.CLIENT)
-        public double getMaxSizeOfParticle() {
-            return this.MaxSizeOfParticle;
-        }
-
-        @OnlyIn(Dist.CLIENT)
-        public int getParticleLifeTime() {
-            return this.LifeTime;
-        }
-
-        public static Codec<DissolationParticles.DissolationParticleData> CODEC(ParticleType<DissolationParticles.DissolationParticleData> particleType) {
-            return RecordCodecBuilder.create((codecBuilder) -> codecBuilder.group(
-                            Codec.DOUBLE.fieldOf("MaxSizeOfParticle").forGetter(DissolationParticles.DissolationParticleData::getMaxSizeOfParticle),
-                            Codec.INT.fieldOf("LifeTime").forGetter(DissolationParticles.DissolationParticleData::getParticleLifeTime)
-                    ).apply(codecBuilder, DissolationParticles.DissolationParticleData::new)
-            );
-        }
-    }
-    public Particle updateSprite(BlockState state, BlockPos pos) { //FORGE: we cannot assume that the x y z of the particles match the block pos of the block.
-        if (pos != null) // There are cases where we are not able to obtain the correct source pos, and need to fallback to the non-model data version
-            this.setSprite(Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getTexture(state, level, pos));
-        return this;
     }
 }

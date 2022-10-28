@@ -46,8 +46,10 @@ public class ModEventBusEvents {
                 HeadBlackParticles.Provider::new);
         Minecraft.getInstance().particleEngine.register(ModParticles.TEST_BLACK_PARTICLES.get(),
                 TESTBlackHeadParticles.Provider::new);
-//        Minecraft.getInstance().particleEngine.register(ModParticles.DISSOLATION_PARTICLES.get(),
-//                DisintegrationParticles.Provider::new);
+      Minecraft.getInstance().particleEngine.register(ModParticles.DISSOLATION_PARTICLES.get(),
+                DissolationParticles.Provider::new);
+        Minecraft.getInstance().particleEngine.register(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
+                DissolationLightningParticles.Provider::new);
     }
     public static void init(FMLCommonSetupEvent event) {
         Messages.register();

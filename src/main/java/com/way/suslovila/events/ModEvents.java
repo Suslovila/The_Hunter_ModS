@@ -9,8 +9,10 @@ import com.way.suslovila.entity.ModEntityTypes;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
+import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.trap.TrapEntity;
+import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.savedData.*;
 import com.way.suslovila.savedData.IsTheVictim.MessagesBoolean;
 import com.way.suslovila.savedData.IsTheVictim.PacketSyncVictimToClientBoolean;
@@ -21,8 +23,10 @@ import com.way.suslovila.simplybackpacks.items.BackpackItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -41,10 +45,12 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.*;
@@ -55,6 +61,7 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.*;
 
+import static com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow.random;
 import static net.minecraft.world.entity.Entity.RemovalReason.DISCARDED;
 
 @Mod.EventBusSubscriber(modid = MysticalCreatures.MOD_ID)
@@ -64,8 +71,12 @@ public class ModEvents {
         if (!event.getEntityLiving().level.isClientSide()){
             if(!SaveVictim.get(event.getEntityLiving().level).getVictim().equals("novictim") && !(SaveVictim.get(event.getEntityLiving().level).getVictim() == null)){
             if(event.getEntityLiving().getUUID().equals(UUID.fromString(SaveVictim.get(event.getEntityLiving().level).getVictim()))) {
-            event.getEntityLiving().addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 2000, 3));
-        }
+                event.getEntityLiving().addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 2000, 3));
+                if (event.getEntityLiving() instanceof Player && ((Player)event.getEntityLiving()).getSleepTimer() == 99) {
+//                    ((ServerPlayer)event.getEntityLiving()).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.GUARDIAN_ELDER_EFFECT, this.isSilent() ? 0.0F : 1.0F));
+
+                }
+            }
             }
         if (!event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof Player) {
              //System.out.println("Victim:" + SaveVictim.get(event.getEntityLiving().level).getVictim());
@@ -79,6 +90,43 @@ public class ModEvents {
         }
     }
 
+    @SubscribeEvent
+   public static void stuffForExplosionArrow(EntityLeaveWorldEvent event) {
+
+      if(event.getEntity() instanceof ExplosionArrow){
+           BlockPos pos = event.getEntity().blockPosition();
+           ExplosionArrow arrow = (ExplosionArrow) event.getEntity();
+         for(int x = pos.getX()-  5;x < pos.getX() + 5; x++) {
+               for (int y = pos.getY() - 5; y < pos.getY() + 5; y++) {
+                  for (int z = pos.getZ() - 5; z < pos.getZ() + 5; z++) {
+
+                        BlockPos checkPos = new BlockPos(x,y,z);
+                      Vec3 vec = new Vec3(checkPos.getX() - arrow.getX(), checkPos.getY() - arrow.getY(), checkPos.getZ() - arrow.getZ());
+
+                       if (vec.length() <= 5 && !(arrow.level.getBlockState(checkPos).getBlock().getExplosionResistance() >=  Blocks.OBSIDIAN.getExplosionResistance()) && !arrow.level.getBlockState(checkPos).isAir() ) {
+                           if (!arrow.level.isClientSide()) {
+                               arrow.level.removeBlock(checkPos, true);
+                           }else{
+//                               if(random.nextInt(8) == 7){
+//                                   arrow.level.addParticle(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
+//                                           checkPos.getX(), checkPos.getY(), checkPos.getZ(),
+//                                           0, 0,0);
+
+                               int g = 0;
+                      System.out.println(arrow.level.getBlockState(checkPos));
+                       while (g < 8) {
+                            arrow.level.addParticle(ModParticles.DISSOLATION_PARTICLES.get(),
+                                 checkPos.getX(), checkPos.getY(), checkPos.getZ(),
+                                  random.nextDouble(-0.25d, 0.25d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d));
+                           g++;
+                       }
+                           }
+                       }
+                  }
+              }
+           }
+      }
+   }
     @SubscribeEvent
     public static void ifPlayerAttacksHunter(AttackEntityEvent event) {
         if (!event.getTarget().level.isClientSide() && event.getTarget() instanceof Zombie) {

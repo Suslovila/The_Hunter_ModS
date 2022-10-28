@@ -30,7 +30,7 @@ public class HeadBlackParticles extends TextureSheetParticle {
 
 
 
-        this.friction = 0.8F;
+        this.friction = 1F;
 
        double deltaXSpeed = random.nextDouble(0.2D, 0.6D);
         double deltaYSpeed = random.nextDouble(0.2D, 0.6D);
