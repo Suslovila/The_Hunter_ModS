@@ -9,6 +9,7 @@ import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.savedData.IsTheVictim.MessagesBoolean;
 import com.way.suslovila.savedData.arrow.MessagesForArrow;
+import com.way.suslovila.savedData.clientSynch.MessageForRainyAura;
 import com.way.suslovila.savedData.clientSynch.Messages;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
@@ -55,5 +56,6 @@ public class ModEventBusEvents {
         Messages.register();
         MessagesBoolean.register();
         MessagesForArrow.register();
+        MessageForRainyAura.register();
     }
 }

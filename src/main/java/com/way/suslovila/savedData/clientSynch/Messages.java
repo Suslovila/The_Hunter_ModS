@@ -5,10 +5,13 @@ import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+
+import javax.swing.text.html.parser.Entity;
 
 public class Messages {
 
@@ -34,6 +37,15 @@ public class Messages {
                 .encoder(PacketSyncVictimToClient::toBytes)
                 .consumer(PacketSyncVictimToClient::handle)
                 .add();
+
+        net.messageBuilder(PacketSyncRainyAuraToClient.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PacketSyncRainyAuraToClient::new)
+                .encoder(PacketSyncRainyAuraToClient::toBytes)
+                .consumer(PacketSyncRainyAuraToClient::handle)
+                .add();
+
+
+
     }
 
     public static <MSG> void sendToServer(MSG message) {
@@ -55,5 +67,8 @@ public class Messages {
     public static <MSG> void sendToCloneArrow(MSG message, HunterEntity entity) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
     }
+    public static <MSG> void sendRainyAuraInfo(MSG message, LivingEntity entity) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
 
+    }
 }

@@ -11,6 +11,7 @@ import com.way.suslovila.savedData.SaveVictim;
 import com.way.suslovila.savedData.arrow.MessagesForArrow;
 import com.way.suslovila.savedData.arrow.PacketSpawnArrow;
 import com.way.suslovila.savedData.clientSynch.Messages;
+import com.way.suslovila.savedData.clientSynch.PacketSyncRainyAuraToClient;
 import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
@@ -32,8 +33,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.IAnimationTickable;
 import software.bernie.geckolib3.core.PlayState;
@@ -46,10 +49,7 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import software.bernie.geckolib3.core.processor.IBone;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimationTickable {
@@ -233,6 +233,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
 //        System.out.println(this.getYRot());
 //        System.out.println(this.getYHeadRot());
         if (!level.isClientSide()) {
+           Messages.sendRainyAuraInfo(new PacketSyncRainyAuraToClient(new ArrayList<>(), new ArrayList<>()), this);
 //working with arrows:
 //            System.out.println("Is shooting: " + getShooting());
 //            System.out.println("Timer for shooting: " + getTimeForShooting());
@@ -323,7 +324,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                         SpeedArrow arrow = new SpeedArrow(ModEntityTypes.SPEED_ARROW.get(), this.level);
                                         arrow.setPos(arrowXPos, arrowYpos, arrowZpos);
                                         Vec3 destination = new Vec3(player.getX() - arrowXPos, player.getY() + 1.5F - arrowYpos, player.getZ() - arrowZpos);
-                                        arrow.setDeltaMovement(destination.scale(0.55f));
+                                        arrow.setDeltaMovement(destination.scale(0.1f));
                                         this.level.addFreshEntity(arrow);
                                         arrow.setXCoordToAim((float) player.getX());
                                         arrow.setYCoordToAim((float) player.getY());

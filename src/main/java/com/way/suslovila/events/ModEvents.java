@@ -5,28 +5,22 @@ import com.way.suslovila.bagentity.BagProvider;
 import com.way.suslovila.bagentity.HunterBagEntity;
 import com.way.suslovila.bagentity.HunterBagEntityItemsStorage;
 import com.way.suslovila.effects.ModEffects;
+import com.way.suslovila.effects.rainyaura.RainyAuraCapProvider;
+import com.way.suslovila.effects.rainyaura.RainyAuraStorage;
 import com.way.suslovila.entity.ModEntityTypes;
 import com.way.suslovila.entity.hunter.HunterEntity;
-import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
-import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.savedData.*;
-import com.way.suslovila.savedData.IsTheVictim.MessagesBoolean;
-import com.way.suslovila.savedData.IsTheVictim.PacketSyncVictimToClientBoolean;
-import com.way.suslovila.savedData.clientSynch.Messages;
-import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
 import com.way.suslovila.simplybackpacks.inventory.BackpackData;
 import com.way.suslovila.simplybackpacks.items.BackpackItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -79,10 +73,7 @@ public class ModEvents {
             }
             }
         if (!event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof Player) {
-             //System.out.println("Victim:" + SaveVictim.get(event.getEntityLiving().level).getVictim());
 
-//            System.out.println("items in bag" + HunterBagData.get(event.getEntityLiving().level).getItemsInBag());
-            //System.out.println("Hunter:" + HunterAmountData.get(event.getEntityLiving().level).getPreviousHunter());
         }
         if (!event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof HunterEntity && event.getEntityLiving().getUUID().equals(HunterAmountData.get(event.getEntityLiving().level).getPreviousHunter())) {
             event.getEntityLiving().addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 70, 3));
@@ -572,15 +563,21 @@ public class ModEvents {
     @SubscribeEvent
     public static void onAttachCapabilitiesBag(AttachCapabilitiesEvent<Entity> event) {
         if (event.getObject() instanceof HunterBagEntity) {
-                if (!event.getObject().getCapability(BagProvider.BAG).isPresent()) {
-                    // The bag does not already have this capability so we need to add the capability provider here
-                    event.addCapability(new ResourceLocation(MysticalCreatures.MOD_ID, "bag"), new BagProvider());
-                }
+            if (!event.getObject().getCapability(BagProvider.BAG).isPresent()) {
+                // The bag does not already have this capability so we need to add the capability provider here
+                event.addCapability(new ResourceLocation(MysticalCreatures.MOD_ID, "bag"), new BagProvider());
+            }
+        }
+        if (event.getObject() instanceof Entity && !event.getObject().getCapability(RainyAuraCapProvider.BLOCKS).isPresent()) {
+            event.addCapability(new ResourceLocation(MysticalCreatures.MOD_ID, "blocksforrainyaura"), new RainyAuraCapProvider());
+
         }
     }
+
 @SubscribeEvent
         public static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
             event.register(HunterBagEntityItemsStorage.class);
+            event.register(RainyAuraStorage.class);
         }
     public static ItemStack putItemsToBackpack(ItemStack backpack, Level level){
         BackpackData data = BackpackItem.getData(backpack);

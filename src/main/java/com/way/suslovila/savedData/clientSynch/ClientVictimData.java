@@ -4,7 +4,7 @@ package com.way.suslovila.savedData.clientSynch;
 import java.util.UUID;
 
 /**
- * Class holding the data for victim client-side
+
  */
 public class ClientVictimData {
 
