@@ -78,9 +78,9 @@ public void tick(Level level) {
     for (int i = 0; i < players.size(); i++) {
         if (players.get(i) instanceof ServerPlayer serverPlayer) {
             ServerPlayer player = (ServerPlayer) players.get(i);
-            if (SaveVictim.get((player).level).getVictim() != null) {
+            if (SaveVictim.get((player).level).getVictim() != null && !(SaveVictim.get((player).level).equals("novictim"))) {
                 //System.out.println("victim is");
-                if (!(this.getVictim().equals("novictim"))) {
+                if (!(SaveVictim.get((player).level).equals("novictim"))) {
                     if (UUID.fromString(SaveVictim.get((player).level).getVictim()).equals((player.getUUID()))) {
                         flag = true;
                         //System.out.println("He is the Victim!");

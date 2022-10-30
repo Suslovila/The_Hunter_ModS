@@ -8,6 +8,7 @@ import com.way.suslovila.savedData.clientSynch.Messages;
 import com.way.suslovila.savedData.clientSynch.PacketSyncRainyAuraToClient;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
@@ -33,6 +34,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class RainyAuraTalismanItem extends Item {
@@ -422,6 +424,18 @@ public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotI
                 return InteractionResultHolder.pass(itemstack);
             }
 
+    }
+    @Nullable
+    @Override
+    public CompoundTag getShareTag(ItemStack stack) {
+        super.getShareTag(stack);
+        return QuiverHolderAttacher.getQuiverHolderUnwrap(stack).serializeNBT(true);
+    }
+
+    @Override
+    public void readShareTag(ItemStack stack, @Nullable CompoundTag nbt) {
+        QuiverHolderAttacher.getQuiverHolderUnwrap(stack).deserializeNBT(nbt, true);
+        super.readShareTag(stack,nbt);
     }
 public enum EnergyForDifferentActions{
         ACTIVATION_MINIMUM(500),

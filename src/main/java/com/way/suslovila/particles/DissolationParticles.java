@@ -33,7 +33,7 @@ public class DissolationParticles extends TextureSheetParticle {
         this.yd = yd;
         this.zd = zd;
         this.gravity = 0;
-        this.quadSize *= random.nextDouble(0.1D,1);
+        this.quadSize *= random.nextDouble(0.1D,1D);
         BlockPos blockPos = new BlockPos(xCoord, yCoord, zCoord);
         BlockState blockState = level.getBlockState(blockPos);
         this.setSprite(Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getParticleIcon(blockState));

@@ -380,21 +380,21 @@ public class ModEvents {
                                             entity.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1200, 0));
                                             entity.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 1200, 1));
                                         }
-                                        if (level.getBlockState(checkPos).getBlock() == Blocks.SOUL_CAMPFIRE || level.getBlockState(checkPos).getBlock() == Blocks.CAMPFIRE) {
-                                            if (level.getBlockState(checkPos).getValue(BlockStateProperties.LIT)) {
-                                                event.setCanceled(true);
-                                                entity.teleportTo(x, y + 1, z);
-                                                level.getBlockState(checkPos).setValue(BlockStateProperties.LIT, false);
-                                                entity.setHealth(entity.getMaxHealth());
-                                                flag = false;
-                                                entity.removeAllEffects();
-                                                entity.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 1200, 4));
-                                                entity.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1200, 0));
-                                                entity.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 1200, 1));
-
-
-                                            }
-                                        }
+//                                        if (level.getBlockState(checkPos).getBlock() == Blocks.SOUL_CAMPFIRE || level.getBlockState(checkPos).getBlock() == Blocks.CAMPFIRE) {
+//                                            if (level.getBlockState(checkPos).getValue(BlockStateProperties.LIT)) {
+//                                                event.setCanceled(true);
+//                                                entity.teleportTo(x, y + 1, z);
+//                                                level.getBlockState(checkPos).setValue(BlockStateProperties.LIT, false);
+//                                                entity.setHealth(entity.getMaxHealth());
+//                                                flag = false;
+//                                                entity.removeAllEffects();
+//                                                entity.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 1200, 4));
+//                                                entity.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1200, 0));
+//                                                entity.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 1200, 1));
+//
+//
+//                                            }
+//                                        }
 
                                     }
                                 }
