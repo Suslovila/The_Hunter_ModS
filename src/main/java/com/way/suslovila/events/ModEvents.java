@@ -5,6 +5,7 @@ import com.way.suslovila.bagentity.BagProvider;
 import com.way.suslovila.bagentity.HunterBagEntity;
 import com.way.suslovila.bagentity.HunterBagEntityItemsStorage;
 import com.way.suslovila.effects.ModEffects;
+import com.way.suslovila.effects.RainyAura;
 import com.way.suslovila.effects.rainyaura.RainyAuraCapProvider;
 import com.way.suslovila.effects.rainyaura.RainyAuraStorage;
 import com.way.suslovila.entity.ModEntityTypes;
@@ -12,15 +13,22 @@ import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.trap.TrapEntity;
+import com.way.suslovila.item.RainyAuraTalisman.RainyAuraTalismanItem;
 import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.savedData.*;
+import com.way.suslovila.savedData.clientSynch.ClientRainyAuraData;
+import com.way.suslovila.savedData.clientSynch.Messages;
+import com.way.suslovila.savedData.clientSynch.PacketSyncRainyAuraToClient;
 import com.way.suslovila.simplybackpacks.inventory.BackpackData;
 import com.way.suslovila.simplybackpacks.items.BackpackItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -36,6 +44,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
@@ -62,6 +71,7 @@ import static net.minecraft.world.entity.Entity.RemovalReason.DISCARDED;
 public class ModEvents {
     @SubscribeEvent
     public static void checkIfEntityIsAVictimEvent(LivingEvent.LivingUpdateEvent event) {
+
         if (!event.getEntityLiving().level.isClientSide()){
             if(!SaveVictim.get(event.getEntityLiving().level).getVictim().equals("novictim") && !(SaveVictim.get(event.getEntityLiving().level).getVictim() == null)){
             if(event.getEntityLiving().getUUID().equals(UUID.fromString(SaveVictim.get(event.getEntityLiving().level).getVictim()))) {
@@ -72,6 +82,7 @@ public class ModEvents {
                 }
             }
             }
+
         if (!event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof Player) {
 
         }
@@ -299,76 +310,10 @@ public class ModEvents {
         }
     }
 
-    @SubscribeEvent
-    public static void ForbidUseFruit(EntityTeleportEvent.ChorusFruit event) {
-        if (!event.getEntity().level.isClientSide()) {
-            if (event.getEntity() instanceof LivingEntity) {
 
-                if (((LivingEntity) event.getEntity()).hasEffect(ModEffects.ENDER_SEAL.get())) {
-                    event.setCanceled(true);
-                } else {
-                    Level level = event.getEntity().level;
-                    double x = event.getEntity().getX();
-                    double y = event.getEntity().getY();
-                    double z = event.getEntity().getZ();
-                    boolean anyhasEffect = false;
-                    List<Entity> entities = level.getEntities(event.getEntity(), new AABB(x - 30.0D, y - 30.0D, z - 30.0D, x + 30.0D, y + 30.0D, z + 30.0D), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
-                    for (int i = 0; i < entities.size(); i++) {
-                        if (entities.get(i) instanceof LivingEntity) {
-                            if (((LivingEntity) entities.get(i)).hasEffect(ModEffects.ENDER_FRACTURE.get())) {
-                                anyhasEffect = true;
-                            }
-                        }
-                    }
-                    if (anyhasEffect) {
-                        DamageSource fracture = (new DamageSource("fracture")).bypassArmor().bypassInvul();
-                        BlockPos position = event.getEntity().blockPosition();
-                        BlockPos newPos = new BlockPos(position.getX(), position.getY() + ((double) event.getEntity().getDimensions(event.getEntity().getPose()).height), position.getZ());
-                        event.getEntity().level.levelEvent(2003, newPos, 0);
-                        event.setCanceled(true);
-
-                    }
-                }
-            }
-        }
-    }
 
     @SubscribeEvent
-    public static void ForbidTeleport(EntityTeleportEvent.EnderEntity event) {
-        if (!event.getEntity().level.isClientSide()) {
-            if (event.getEntity() instanceof LivingEntity) {
-
-                if (((LivingEntity) event.getEntity()).hasEffect(ModEffects.ENDER_SEAL.get())) {
-                    event.setCanceled(true);
-                } else {
-                    Level level = event.getEntity().level;
-                    double x = event.getEntity().getX();
-                    double y = event.getEntity().getY();
-                    double z = event.getEntity().getZ();
-                    boolean anyhasEffect = false;
-                    List<Entity> entities = level.getEntities(event.getEntity(), new AABB(x - 30.0D, y - 30.0D, z - 30.0D, x + 30.0D, y + 30.0D, z + 30.0D), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
-                    for (int i = 0; i < entities.size(); i++) {
-                        if (entities.get(i) instanceof LivingEntity) {
-                            if (((LivingEntity) entities.get(i)).hasEffect(ModEffects.ENDER_FRACTURE.get())) {
-                                anyhasEffect = true;
-                            }
-                        }
-                    }
-                    if (anyhasEffect) {
-                        DamageSource fracture = (new DamageSource("fracture")).bypassArmor().bypassInvul();
-                        event.getEntity().hurt(fracture, 5);
-                        BlockPos position = event.getEntity().blockPosition();
-                        BlockPos newPos = new BlockPos(position.getX(), position.getY() + ((double) event.getEntity().getDimensions(event.getEntity().getPose()).height), position.getZ());
-                        event.getEntity().level.levelEvent(2003, newPos, 0);
-                        event.setCanceled(true);
-                    }
-                }
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void ForbidUseEnderPearl(EntityTeleportEvent.EnderPearl event) {
+    public static void ForbidUseEnderPearl(EntityTeleportEvent event) {
         if (!event.getEntity().level.isClientSide()) {
             if (event.getEntity() instanceof LivingEntity) {
 
@@ -420,12 +365,9 @@ public class ModEvents {
                 BlockPos checkPos;
 
                 boolean flag = true;
-                for (int x = event.getEntityLiving().getBlockX() - distance; x < event.getEntityLiving().getBlockX() + distance; x++) {
-                    if (flag) {
-                        for (int y = event.getEntityLiving().getBlockY() - distance; y < event.getEntityLiving().getBlockY() + distance; y++) {
-                            if (flag) {
-                                for (int z = event.getEntityLiving().getBlockZ() - distance; z < event.getEntityLiving().getBlockZ() + distance; z++) {
-                                    if (flag) {
+                for (int x = event.getEntityLiving().getBlockX() - distance; x < event.getEntityLiving().getBlockX() + distance && flag; x++) {
+                        for (int y = event.getEntityLiving().getBlockY() - distance; y < event.getEntityLiving().getBlockY() + distance && flag; y++) {
+                                for (int z = event.getEntityLiving().getBlockZ() - distance; z < event.getEntityLiving().getBlockZ() + distance && flag; z++) {
                                         checkPos = new BlockPos(x, y, z);
                                         if (level.getBlockState(checkPos).getBlock() == Blocks.FIRE || level.getBlockState(checkPos).getBlock() == Blocks.SOUL_FIRE) {
                                             event.setCanceled(true);
@@ -456,9 +398,9 @@ public class ModEvents {
 
                                     }
                                 }
-                            }
-                        }
-                    }
+
+
+
                 }
             }
         }
@@ -494,12 +436,9 @@ public class ModEvents {
                             BlockPos checkpos;
                             int maxDistance = 20;
                             boolean flag = true;
-                            for (int x = victim.getBlockX() + maxDistance; x < victim.getBlockX() + maxDistance; x++) {
-                                if (flag) {
-                                    for (int y = victim.getBlockY()-2; y < victim.getBlockY() + 2; y++) {
-                                        if (flag) {
-                                            for (int z = victim.getBlockZ() - maxDistance; z < victim.getBlockZ() + maxDistance; z++) {
-                                                if (flag) {
+                            for (int x = victim.getBlockX() + maxDistance; x < victim.getBlockX() + maxDistance && flag; x++) {
+                                    for (int y = victim.getBlockY()-2; y < victim.getBlockY() + 2 && flag; y++) {
+                                            for (int z = victim.getBlockZ() - maxDistance; z < victim.getBlockZ() + maxDistance && flag; z++) {
                                                     if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 8) {
                                                         checkpos = new BlockPos(x,y,z);
                                                         //trying to find walls
@@ -508,9 +447,9 @@ public class ModEvents {
                                                     }
                                                 }
                                             }
-                                        }
-                                    }
-                                }
+
+
+
                             }
 
 
@@ -522,11 +461,8 @@ public class ModEvents {
                         int maxDistance = 20;
                         boolean flag = true;
                         for (int x = victim.getBlockX() + maxDistance; x < victim.getBlockX() + maxDistance; x++) {
-                            if (flag) {
                                 for (int y = victim.getBlockY() - maxDistance; y < victim.getBlockY() + maxDistance; y++) {
-                                    if (flag) {
                                         for (int z = victim.getBlockZ() - maxDistance; z < victim.getBlockZ() + maxDistance; z++) {
-                                            if (flag) {
                                                 if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 8) {
                                                     checkPos = new BlockPos(x, y, z);
                                                     BlockPos up1block = new BlockPos(x, y + 1, z);
@@ -537,9 +473,9 @@ public class ModEvents {
 
                                                     }
                                                 }
-                                            }
-                                            }
-                                        }
+
+
+
                                     }
                                 }
                             }
@@ -573,6 +509,12 @@ public class ModEvents {
 
         }
     }
+    @SubscribeEvent
+    public static void onAttachCapabilitiesItems(AttachCapabilitiesEvent<ItemStack> event) {
+       if(event.getObject().getItem() instanceof RainyAuraTalismanItem){
+           event.addCapability(new ResourceLocation(MysticalCreatures.MOD_ID, "rainyauratalisman"), new RainyAuraCapProvider());
+       }
+    }
 
 @SubscribeEvent
         public static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
@@ -584,6 +526,16 @@ public class ModEvents {
         data.putItemsInBackpackFromHunterStorage(level);
         return backpack;
     }
+
+    @SubscribeEvent
+    public static void clearRainyAuraCAPA(PotionEvent.PotionRemoveEvent event){
+        if (event.getPotion() instanceof RainyAura){
+            event.getEntityLiving().getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(RainyAuraStorage::clearAll);
+            System.out.println("Clearing CAPA");
+        }
+    }
+
+
 }
 
 

@@ -16,9 +16,9 @@ import java.util.function.Supplier;
 public class PacketSyncRainyAuraToClient {
 
     private final ArrayList<BlockPos> blocks;
-    private final ArrayList<UUID> entities;
+    private final ArrayList<Integer> entities;
 
-    public PacketSyncRainyAuraToClient(ArrayList<BlockPos> blocks, ArrayList<UUID> entities) {
+    public PacketSyncRainyAuraToClient(ArrayList<BlockPos> blocks, ArrayList<Integer> entities) {
         this.blocks = blocks;
         this.entities = entities;
     }
@@ -30,11 +30,11 @@ public class PacketSyncRainyAuraToClient {
             CompoundTag tag = listTag.getCompound(i);
             blockPosInside.add(new BlockPos(tag.getInt("x"), tag.getInt("y"),tag.getInt("z")));
         }
-        ArrayList<UUID> enttitiesInside = new ArrayList<>();
+        ArrayList<Integer> enttitiesInside = new ArrayList<>();
         ListTag listTagForEntity = compound.getList("entitynear", Tag.TAG_COMPOUND);
         for(int i = 0; i < listTagForEntity.size(); i++){
             CompoundTag tag = listTagForEntity.getCompound(i);
-            enttitiesInside.add(tag.getUUID("uuid"));
+            enttitiesInside.add(tag.getInt("id"));
         }
         blocks = blockPosInside;
         entities = enttitiesInside;
@@ -55,9 +55,9 @@ public class PacketSyncRainyAuraToClient {
 
         ListTag listTagForEntity = new ListTag();
         for(int i = 0; i < entities.size(); i++) {
-            UUID entity = entities.get(i);
+            int entity = entities.get(i);
             CompoundTag tag2 = new CompoundTag();
-            tag2.putUUID("uuid",entity);
+            tag2.putInt("id",entity);
             listTagForEntity.add(tag2);
         }
         tag.put("entitynear", listTagForEntity);
@@ -71,8 +71,11 @@ public class PacketSyncRainyAuraToClient {
             // Here we are client side.
             // Be very careful not to access client-only classes here! (like Minecraft) because
             // this packet needs to be available server-side too
-            if(blocks != null && entities != null) {
-                ClientRainyAuraData.setBlocksAndEntities(blocks, entities);
+            if(blocks != null) {
+                ClientRainyAuraData.setBlocks(blocks);
+            }
+            if(entities != null) {
+                ClientRainyAuraData.setEntities(entities);
             }
         });
         return true;

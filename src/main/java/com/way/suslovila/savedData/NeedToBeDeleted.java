@@ -72,7 +72,7 @@ public class NeedToBeDeleted {
             // Here we are client side.
             // Be very careful not to access client-only classes here! (like Minecraft) because
             // this packet needs to be available server-side too
-            ClientRainyAuraData.setBlocksAndEntities(blocks, entities);
+//            ClientRainyAuraData.setBlocksAndEntities(blocks, entities);
             System.out.println("PacketToClient");
             System.out.println(blocks);
         });

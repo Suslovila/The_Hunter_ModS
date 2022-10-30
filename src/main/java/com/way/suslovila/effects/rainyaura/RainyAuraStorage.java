@@ -14,29 +14,54 @@ import java.util.Set;
 import java.util.UUID;
 
 public class RainyAuraStorage {
-    private HashMap<BlockPos, Integer> blocks = new HashMap<>();
-    private HashMap<UUID, Integer> entities = new HashMap<>();
+    //Talisman modes: 0 - ACTIVE, 1 - SAVEMOD, 2 - PASSIVE 3 - DISABLED
+     private HashMap<BlockPos, Integer> blocks = new HashMap<>();
+    private HashMap<Integer, Integer> entities = new HashMap<>();
+    private long energy = 0;
+    private long maxEnergy = 0;
+    private int mode = 0;
 
     public @NotNull HashMap<BlockPos, Integer> getMapOfBlocks(){
         return blocks;
     }
-    public @NotNull HashMap<UUID, Integer> getEntities(){
+    public @NotNull HashMap<Integer, Integer> getEntities(){
         return entities;
+    }
+    public @NotNull long getEnergy(){return energy;}
+    public void changeEnergy(long amount){
+        energy = ensureRange(energy + amount, 0, maxEnergy);
+    }
+    public int getMode(){
+        return mode;
     }
     public void setBlocks(HashMap<BlockPos, Integer> blocks){
         this.blocks = blocks;
     }
+    public void changeMode(){
+        if (mode == 2){
+            mode = 0;
+        }else{
+            mode += 1;
+        }
+    }
+    public void setEntities(HashMap<Integer, Integer> entities){
+        this.entities = entities;
+    }
     public void removeBlock(BlockPos pos){
         blocks.remove(pos);
     }
-    public void removeEntity(UUID entity){
+    public void removeEntity(Integer entity){
         entities.remove(entity);
     }
     public void addBlockPos(BlockPos pos, int timer){
         blocks.put(pos, timer);
     }
-    public void addEntity(UUID entity, int timer){
+    public void addEntity(Integer entity, int timer){
         entities.put(entity, timer);
+    }
+    public void clearAll(){
+        blocks.clear();
+        entities.clear();
     }
     public void saveNBTData(CompoundTag tag) {
         ListTag listTag = new ListTag();
@@ -56,17 +81,24 @@ public class RainyAuraStorage {
 
 
         ListTag listTagForEntity = new ListTag();
-        Set<UUID> keysEntities = entities.keySet();
-        Iterator<UUID> iterator1 = keysEntities.iterator();
+        Set<Integer> keysEntities = entities.keySet();
+        Iterator<Integer> iterator1 = keysEntities.iterator();
         while (iterator1.hasNext()) {
-            UUID entity = iterator1.next();
+            Integer entity = iterator1.next();
             int timer = entities.get(entity);
             CompoundTag tag1 = new CompoundTag();
-            tag1.putUUID("uuid",entity);
+            tag1.putInt("uuid",entity);
             tag1.putInt("timer", timer);
             listTagForEntity.add(tag1);
         }
+
         tag.put("entitynear", listTagForEntity);
+        CompoundTag tag1 = new CompoundTag();
+        tag1.putLong("energy", energy);
+        tag1.putLong("maxenergy", energy);
+        tag1.putInt("mode", mode);
+        tag.put("energyinfo", tag1);
+
     }
 
     public void loadNBTData(CompoundTag compound) {
@@ -79,9 +111,18 @@ public class RainyAuraStorage {
         ListTag listTagForEntity = compound.getList("entitynear", Tag.TAG_COMPOUND);
         for(int i = 0; i < listTagForEntity.size(); i++){
             CompoundTag tag = listTagForEntity.getCompound(i);
-            entities.put(tag.getUUID("uuid"), tag.getInt("timer"));
+            entities.put(tag.getInt("uuid"), tag.getInt("timer"));
         }
+
+        CompoundTag tag = compound.getCompound("energyinfo");
+        energy = tag.getLong("energy");
+        maxEnergy = tag.getLong("maxenergy");
+        mode = tag.getInt("mode");
     }
+    public static long ensureRange(long value, long min, long max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
 }
 
 

@@ -13,18 +13,20 @@ import java.util.UUID;
 public class ClientRainyAuraData {
 
     private static ArrayList<BlockPos> blocks;
-    private static ArrayList<UUID> entities;
+    private static ArrayList<Integer> entities;
 
-    public static void setBlocksAndEntities(ArrayList<BlockPos> blocks, ArrayList<UUID> entities) {
-        ClientRainyAuraData.blocks = blocks;
+    public static void setEntities( ArrayList<Integer> entities) {
         ClientRainyAuraData.entities = entities;
+    }
+    public static void setBlocks(ArrayList<BlockPos> blocks) {
+        ClientRainyAuraData.blocks = blocks;
     }
 
 
     public static ArrayList<BlockPos> getBlocks() {
         return blocks;
     }
-    public static ArrayList<UUID> getEntities() {
+    public static ArrayList<Integer> getEntities() {
         return entities;
     }
 

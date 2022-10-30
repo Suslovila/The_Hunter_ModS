@@ -6,6 +6,7 @@ import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -67,8 +68,8 @@ public class Messages {
     public static <MSG> void sendToCloneArrow(MSG message, HunterEntity entity) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
     }
-    public static <MSG> void sendRainyAuraInfo(MSG message, LivingEntity entity) {
-        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
+    public static <MSG> void sendRainyAuraInfo(MSG message, ItemStack entity) {
+        INSTANCE.send(PacketDistributor..with(() -> entity), message);
 
     }
 }
