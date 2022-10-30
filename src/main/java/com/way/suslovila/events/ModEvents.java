@@ -412,7 +412,7 @@ public class ModEvents {
 //        saveVictim.tick(event.world);
         if(!event.world.isClientSide()){
 //            System.out.println(HuntersHP.get(event.world).getHunterHP());
-            SaveVictim.get(event.world).tick(event.world);
+//            SaveVictim.get(event.world).tick(event.world);
             if(SaveVictim.get(event.world).getVictim() == null){
                 SaveVictim.get(event.world).changeVictim("novictim");
             }

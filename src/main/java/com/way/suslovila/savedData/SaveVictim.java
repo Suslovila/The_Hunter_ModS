@@ -71,51 +71,49 @@ public void tick(Level level){
     );
 }
 */
-
-public void tick(Level level) {
-    List<? extends Player> players = level.players();
-    boolean flag = false;
-    for (int i = 0; i < players.size(); i++) {
-        if (players.get(i) instanceof ServerPlayer serverPlayer) {
-            ServerPlayer player = (ServerPlayer) players.get(i);
-            if (SaveVictim.get((player).level).getVictim() != null && !(SaveVictim.get((player).level).equals("novictim"))) {
-                //System.out.println("victim is");
-                if (!(SaveVictim.get((player).level).equals("novictim"))) {
-                    if (UUID.fromString(SaveVictim.get((player).level).getVictim()).equals((player.getUUID()))) {
-                        flag = true;
-                        //System.out.println("He is the Victim!");
-                        List<Entity> entities = level.getEntities(player, new AABB((player).getX() - 30, player.getY() - 30, player.getZ() - 30, player.getX() + 30, player.getY() + 30, player.getZ() + 30));
-                        for (int k = 0; k < entities.size(); k++) {
-                            if (entities.get(k) instanceof HunterAppearanceFormEntity) {
-                                //System.out.println("we have a hunter here!");
-                                //System.out.println("There is a victim, lets send info");
-                                Messages.sendToHunter(new PacketSyncVictimToClient(UUID.fromString(SaveVictim.get(level).getVictim())), (HunterAppearanceFormEntity) entities.get(k));
-                                MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(true), (HunterAppearanceFormEntity) entities.get(k));
-                            }
-                        }
-                    }
-
-                }
-            }
-        }
-    }
-    if (!flag) {
-        for (int i = 0; i < players.size(); i++) {
-            if (players.get(i) instanceof ServerPlayer) {
-                ServerPlayer player = (ServerPlayer) players.get(i);
-                List<Entity> entities = level.getEntities(player, new AABB((player).getX() - 30, player.getY() - 30, player.getZ() - 30, player.getX() + 30, player.getY() + 30, player.getZ() + 30));
-                for (int k = 0; k < entities.size(); k++) {
-                    if (entities.get(k) instanceof HunterAppearanceFormEntity) {
-                        Messages.sendToHunter(new PacketSyncVictimToClient(UUID.randomUUID()), (HunterAppearanceFormEntity) entities.get(k));
-                        MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(false), (HunterAppearanceFormEntity) entities.get(k));
-                    }
-                }
-            }
-        }
-    }
-}
-
-
+//
+//public void tick(Level level) {
+//    List<? extends Player> players = level.players();
+//    boolean flag = false;
+//    for (int i = 0; i < players.size(); i++) {
+//        if (players.get(i) instanceof ServerPlayer serverPlayer) {
+//            ServerPlayer player = (ServerPlayer) players.get(i);
+//            if (SaveVictim.get((player).level).getVictim() != null && !(SaveVictim.get((player).level).equals("novictim")) && (UUID.fromString(SaveVictim.get((player).level).getVictim()).equals((player.getUUID())))) {
+//                //System.out.println("victim is");
+//                        flag = true;
+//                        //System.out.println("He is the Victim!");
+//                        List<Entity> entities = level.getEntities(player, new AABB((player).getX() - 30, player.getY() - 30, player.getZ() - 30, player.getX() + 30, player.getY() + 30, player.getZ() + 30));
+//                        for (int k = 0; k < entities.size(); k++) {
+//                            if (entities.get(k) instanceof HunterAppearanceFormEntity) {
+//                                //System.out.println("we have a hunter here!");
+//                                //System.out.println("There is a victim, lets send info");
+//                                Messages.sendToHunter(new PacketSyncVictimToClient(UUID.fromString(SaveVictim.get(level).getVictim())), (HunterAppearanceFormEntity) entities.get(k));
+//                                MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(true), (HunterAppearanceFormEntity) entities.get(k));
+//                            }
+//                        }
+//
+//
+//
+//            }
+//        }
+//    }
+//    if (!flag) {
+//        for (int i = 0; i < players.size(); i++) {
+//            if (players.get(i) instanceof ServerPlayer) {
+//                ServerPlayer player = (ServerPlayer) players.get(i);
+//                List<Entity> entities = level.getEntities(player, new AABB((player).getX() - 30, player.getY() - 30, player.getZ() - 30, player.getX() + 30, player.getY() + 30, player.getZ() + 30));
+//                for (int k = 0; k < entities.size(); k++) {
+//                    if (entities.get(k) instanceof HunterAppearanceFormEntity) {
+//                        Messages.sendToHunter(new PacketSyncVictimToClient(UUID.randomUUID()), (HunterAppearanceFormEntity) entities.get(k));
+//                        MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(false), (HunterAppearanceFormEntity) entities.get(k));
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//
 
 
 

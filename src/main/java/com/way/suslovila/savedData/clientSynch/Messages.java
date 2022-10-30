@@ -68,8 +68,8 @@ public class Messages {
     public static <MSG> void sendToCloneArrow(MSG message, HunterEntity entity) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
     }
-    public static <MSG> void sendRainyAuraInfo(MSG message, ItemStack entity) {
-        INSTANCE.send(PacketDistributor..with(() -> entity), message);
-
-    }
+//    public static <MSG> void sendRainyAuraInfo(MSG message, ItemStack entity) {
+//        INSTANCE.send(PacketDistributor..with(() -> entity), message);
+//
+//    }
 }

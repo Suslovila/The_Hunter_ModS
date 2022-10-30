@@ -39,8 +39,7 @@ public class HunterModel extends AnimatedTickingGeoModel<HunterEntity> {
         //System.out.println("We have got the bone");
         //System.out.println(ClientVictimData.getVictim());
         //System.out.println(ClientVictimDataBoolean.getIsVictim());
-        if ((ClientVictimData.getVictim() != null) && ClientVictimDataBoolean.getIsVictim() && !((HunterEntity)entity).getVulnarble()) {
-            if(entity.level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
+        if ((ClientVictimData.getVictim() != null) && !((HunterEntity)entity).getVulnarble() && entity.level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
 //            System.out.println("Not null");
                 // Player player = entity.level.getPlayerByUUID(ClientVictimData.getVictim());
 //            System.out.println("Victim exists");
@@ -53,7 +52,6 @@ public class HunterModel extends AnimatedTickingGeoModel<HunterEntity> {
                         ((HunterEntity) entity).aimBowAtVictim(EntityAnchorArgument.Anchor.FEET, vec, this.getAnimationProcessor().getBone("leftArm"), this.getAnimationProcessor().getBone("rightArm"), this.getAnimationProcessor().getBone("palm"));
                     }
                 }
-            }
         }
     }
 }

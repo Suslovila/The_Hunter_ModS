@@ -198,7 +198,7 @@ public class RainyAura extends MobEffect {
                 HashMap<BlockPos, Integer> blocksFromCap = pLivingEntity.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getMapOfBlocks).get();
                 HashMap<Integer, Integer> entitiesFromCap = pLivingEntity.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getEntities).get();
 
-                Messages.sendRainyAuraInfo(new PacketSyncRainyAuraToClient(new ArrayList<>(blocksFromCap.keySet()), new ArrayList<>(entitiesFromCap.keySet())), pLivingEntity);
+//                Messages.sendRainyAuraInfo(new PacketSyncRainyAuraToClient(new ArrayList<>(blocksFromCap.keySet()), new ArrayList<>(entitiesFromCap.keySet())), pLivingEntity);
             }
 
             //Mobs && BLocks Stuff Server Stuff

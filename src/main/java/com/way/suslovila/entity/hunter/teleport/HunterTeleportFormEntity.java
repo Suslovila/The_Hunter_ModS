@@ -24,7 +24,7 @@ import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 public class HunterTeleportFormEntity extends Entity implements IAnimatable {
-private int timer = 35;
+private int timer = 39;
     private AnimationFactory factory = new AnimationFactory(this);
 
     public HunterTeleportFormEntity(EntityType<?> pEntityType, Level pLevel) {

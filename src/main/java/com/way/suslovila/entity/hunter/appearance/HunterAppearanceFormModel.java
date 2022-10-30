@@ -42,7 +42,7 @@ public class HunterAppearanceFormModel extends AnimatedGeoModel<HunterAppearance
         //System.out.println("We have got the bone");
         //System.out.println(ClientVictimData.getVictim());
         //System.out.println(ClientVictimDataBoolean.getIsVictim());
-        if ((ClientVictimData.getVictim() != null) && ClientVictimDataBoolean.getIsVictim()) {
+        if ((ClientVictimData.getVictim() != null) && entity.level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
 //            System.out.println("Not null");
            // Player player = entity.level.getPlayerByUUID(ClientVictimData.getVictim());
 //            System.out.println("Victim exists");

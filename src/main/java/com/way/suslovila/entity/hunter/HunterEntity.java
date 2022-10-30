@@ -233,7 +233,6 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
 //        System.out.println(this.getYRot());
 //        System.out.println(this.getYHeadRot());
         if (!level.isClientSide()) {
-           Messages.sendRainyAuraInfo(new PacketSyncRainyAuraToClient(new ArrayList<>(), new ArrayList<>()), this);
 //working with arrows:
 //            System.out.println("Is shooting: " + getShooting());
 //            System.out.println("Timer for shooting: " + getTimeForShooting());
@@ -281,7 +280,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                  }
              }
                 boolean isVictimHere = false;
-                List<Entity> entities = level.getEntities(this, new AABB(this.getX() - 50.0D, this.getY() - 50.0D, this.getZ() - 50.0D, this.getX() + 50.0D, this.getY() + 50.0D, this.getZ() + 50.0D), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
+                List<Entity> entities = level.getEntities(this, new AABB(this.getX() - 40.0D, this.getY() - 40.0D, this.getZ() - 40.0D, this.getX() + 40.0D, this.getY() + 40.0D, this.getZ() + 40.0D), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
                 for (int i = 0; i < entities.size(); i++) {
                     if (entities.get(i) instanceof Player) {
                         if(!SaveVictim.get(this.level).getVictim().equals("novictim")) {
@@ -356,7 +355,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                 if (isVictimHere) {
                     if(!getVulnarble() && !getIsSummoningShadows()) {
                         Messages.sendToHunter(new PacketSyncVictimToClient(UUID.fromString(SaveVictim.get(this.level).getVictim())), this);
-                        MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(true), this);
+//                        MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(true), this);
                         Player player = level.getPlayerByUUID(UUID.fromString(SaveVictim.get(this.level).getVictim()));
                         setXCoordToAim((float)player.getEyePosition().x);
                         setYCoordToAim((float)player.getEyePosition().y);
