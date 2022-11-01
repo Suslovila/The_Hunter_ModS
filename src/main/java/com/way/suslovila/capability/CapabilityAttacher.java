@@ -1,9 +1,18 @@
 package com.way.suslovila.capability;
 
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 
 import javax.annotation.Nullable;
-//
+import java.util.ArrayList;
+import java.util.function.BiConsumer;
+
 //public abstract class CapabilityAttacher {
 //    @SuppressWarnings("rawtypes")
 //    private static final Capability.IStorage EMPTY_STORAGE = new Capability.IStorage() {
@@ -12,7 +21,7 @@ import javax.annotation.Nullable;
 //        public INBT writeNBT(Capability capability, Object instance, Direction side) {return new CompoundNBT();}
 //
 //        @Override
-//        public void readNBT(Capability capability, Object instance, Direction side, INBT nbt) {}
+//        public void readNBT(Capability capability, Object instance, Direction side, NBT nbt) {}
 //    };
 //
 //    static {
@@ -25,12 +34,12 @@ import javax.annotation.Nullable;
 //    }
 //
 //    private static final List<BiConsumer<AttachCapabilitiesEvent<ItemStack>, ItemStack>> capAttachers = new ArrayList<>();
-//    private static final List<Function<ItemStack, LazyOptional<? extends INBTSavable<CompoundNBT>>>> capRetrievers = new ArrayList<>();
+//    private static final List<Function<ItemStack, LazyOptional<? extends INBTSavable<CompoundTag>>>> capRetrievers = new ArrayList<>();
 //
 //
 //    @SuppressWarnings("unchecked")
-//    protected static <C extends INBTSavable<CompoundNBT>> void registerAttacher(Class<ItemStack> entityClass, BiConsumer<AttachCapabilitiesEvent<ItemStack>, ItemStack> attacher,
-//                                                                                           Function<ItemStack, LazyOptional<C>> capRetriever) {
+//    protected static <C extends INBTSavable<CompoundTag>> void registerAttacher(Class<ItemStack> entityClass, BiConsumer<AttachCapabilitiesEvent<ItemStack>, ItemStack> attacher,
+//                                                                                Function<ItemStack, LazyOptional<C>> capRetriever) {
 //        capAttachers.add((event, entity) -> {
 //            if (entityClass.isInstance(entity))
 //                attacher.accept(event, (ItemStack) entity);
@@ -88,5 +97,6 @@ import javax.annotation.Nullable;
 //        // Attaches the capabilities
 //        capAttachers.forEach(attacher -> attacher.accept(event, event.getObject()));
 //    }
+//
 //
 //}

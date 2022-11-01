@@ -4,21 +4,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.UUID;
 
 public class RainyAuraStorage {
     //Talisman modes: 0 - ACTIVE, 1 - SAVEMOD, 2 - PASSIVE 3 - DISABLED
      private HashMap<BlockPos, Integer> blocks = new HashMap<>();
     private HashMap<Integer, Integer> entities = new HashMap<>();
     private long energy = 0;
-    private long maxEnergy = 0;
+    private long maxEnergy = 10000;
     private int mode = 0;
 
     public @NotNull HashMap<BlockPos, Integer> getMapOfBlocks(){
@@ -28,8 +25,21 @@ public class RainyAuraStorage {
         return entities;
     }
     public @NotNull long getEnergy(){return energy;}
-    public void changeEnergy(long amount){
+    public @NotNull long getMaxEnergy(){return maxEnergy;}
+    public boolean reduceEnergy(long amount){
+        if(energy >= amount){
+            energy -= amount;
+        return true;
+        }
+        else return false;
+
+    }
+    public void setMaxEnergy(long energy){
+        maxEnergy = energy;
+    }
+    public void addEnergy(long amount){
         energy = ensureRange(energy + amount, 0, maxEnergy);
+
     }
     public int getMode(){
         return mode;
@@ -38,7 +48,7 @@ public class RainyAuraStorage {
         this.blocks = blocks;
     }
     public void changeMode(){
-        if (mode == 2){
+        if (mode == 3){
             mode = 0;
         }else{
             mode += 1;
@@ -95,7 +105,7 @@ public class RainyAuraStorage {
         tag.put("entitynear", listTagForEntity);
         CompoundTag tag1 = new CompoundTag();
         tag1.putLong("energy", energy);
-        tag1.putLong("maxenergy", energy);
+        tag1.putLong("maxenergy", maxEnergy);
         tag1.putInt("mode", mode);
         tag.put("energyinfo", tag1);
 
@@ -123,6 +133,18 @@ public class RainyAuraStorage {
         return Math.min(Math.max(value, min), max);
     }
 
+
+    public class RainyAuraTalismanModes{
+        String name;
+        boolean extinguishFire;
+        boolean extinguishLava;
+        boolean extinguishEntity;
+        boolean protectYourself;
+        boolean collectWater;
+        public RainyAuraTalismanModes(String name, boolean extinguishFire, boolean extinguishLava, boolean extinguishEntity, boolean protectYourself, boolean collectWater){
+
+        }
+    }
 }
 
 
