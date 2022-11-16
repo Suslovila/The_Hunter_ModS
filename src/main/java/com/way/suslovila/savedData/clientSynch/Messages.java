@@ -5,14 +5,13 @@ import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
-
-import javax.swing.text.html.parser.Entity;
 
 public class Messages {
 
@@ -44,17 +43,28 @@ public class Messages {
                 .encoder(PacketSyncRainyAuraToClient::toBytes)
                 .consumer(PacketSyncRainyAuraToClient::handle)
                 .add();
+        net.messageBuilder(PacketSyncTalismanButtonToServer.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketSyncTalismanButtonToServer::new)
+                .encoder(PacketSyncTalismanButtonToServer::toBytes)
+                .consumer(PacketSyncTalismanButtonToServer::handle)
+                .add();
 
+        net.messageBuilder(MessageWaterShield.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(MessageWaterShield::new)
+                .encoder(MessageWaterShield::toBytes)
+                .consumer(MessageWaterShield::handle)
+                .add();
 
 
     }
 
-    public static <MSG> void sendToServer(MSG message) {
-        INSTANCE.sendToServer(message);
-    }
+
 
     public static <MSG> void sendToHunter(MSG message, HunterAppearanceFormEntity entity) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
+    }
+    public static <MSG> void sendWaterShield(MSG message, LivingEntity entity) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
     }
     public static <MSG> void sendToHunter(MSG message, HunterEntity entity) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
@@ -67,6 +77,12 @@ public class Messages {
     }
     public static <MSG> void sendToCloneArrow(MSG message, HunterEntity entity) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
+    }
+    public static <MSG> void send(MSG message, LivingEntity entity) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
+    }
+    public static <MSG> void sendToServer(MSG message) {
+        INSTANCE.sendToServer(message);
     }
 //    public static <MSG> void sendRainyAuraInfo(MSG message, ItemStack entity) {
 //        INSTANCE.send(PacketDistributor..with(() -> entity), message);

@@ -16,7 +16,28 @@ public class RainyAuraStorage {
     private HashMap<Integer, Integer> entities = new HashMap<>();
     private long energy = 0;
     private long maxEnergy = 10000;
-    private int mode = 0;
+    boolean extinguishFire;
+    boolean extinguishLava;
+    boolean extinguishEntity;
+    boolean protectYourself;
+    boolean collectWater;
+     boolean isActive;
+
+    public void changeExtinguishFire(){
+        extinguishFire = ! extinguishFire;
+    }
+    public void changeExtinguishLava(){
+        extinguishLava = ! extinguishLava;
+    }
+    public void changeExtinguishEntity(){
+        extinguishEntity = ! extinguishEntity;
+    }
+    public void changeProtectYourself(){
+        protectYourself = ! protectYourself;
+    }
+    public void changeCollectWater(){
+        collectWater = ! collectWater;
+    }
 
     public @NotNull HashMap<BlockPos, Integer> getMapOfBlocks(){
         return blocks;
@@ -41,18 +62,14 @@ public class RainyAuraStorage {
         energy = ensureRange(energy + amount, 0, maxEnergy);
 
     }
-    public int getMode(){
-        return mode;
+    public boolean getIsActive(){
+        return isActive;
     }
     public void setBlocks(HashMap<BlockPos, Integer> blocks){
         this.blocks = blocks;
     }
-    public void changeMode(){
-        if (mode == 3){
-            mode = 0;
-        }else{
-            mode += 1;
-        }
+    public void toggleOnOff(){
+        isActive = !isActive;
     }
     public void setEntities(HashMap<Integer, Integer> entities){
         this.entities = entities;
@@ -106,11 +123,17 @@ public class RainyAuraStorage {
         CompoundTag tag1 = new CompoundTag();
         tag1.putLong("energy", energy);
         tag1.putLong("maxenergy", maxEnergy);
-        tag1.putInt("mode", mode);
+        tag1.putBoolean("mode", isActive);
         tag.put("energyinfo", tag1);
 
-    }
+        tag.putBoolean("extinguishFire", extinguishFire);
+        tag.putBoolean("extinguishLava", extinguishLava);
+        tag.putBoolean("extinguishEntity", extinguishEntity);
+        tag.putBoolean("protectYourself", protectYourself);
+        tag.putBoolean("collectWater", collectWater);
 
+
+    }
     public void loadNBTData(CompoundTag compound) {
         ListTag listTag = compound.getList("blocksnear", Tag.TAG_COMPOUND);
         for(int i = 0; i < listTag.size(); i++){
@@ -127,23 +150,15 @@ public class RainyAuraStorage {
         CompoundTag tag = compound.getCompound("energyinfo");
         energy = tag.getLong("energy");
         maxEnergy = tag.getLong("maxenergy");
-        mode = tag.getInt("mode");
+        isActive = tag.getBoolean("mode");
+        extinguishFire = tag.getBoolean("extinguishFire");
+        extinguishLava = tag.getBoolean("extinguishLava");
+        extinguishEntity = tag.getBoolean("extinguishEntity");
+        protectYourself = tag.getBoolean("protectYourself");
+        collectWater = tag.getBoolean("collectWater");
     }
     public static long ensureRange(long value, long min, long max) {
         return Math.min(Math.max(value, min), max);
-    }
-
-
-    public class RainyAuraTalismanModes{
-        String name;
-        boolean extinguishFire;
-        boolean extinguishLava;
-        boolean extinguishEntity;
-        boolean protectYourself;
-        boolean collectWater;
-        public RainyAuraTalismanModes(String name, boolean extinguishFire, boolean extinguishLava, boolean extinguishEntity, boolean protectYourself, boolean collectWater){
-
-        }
     }
 }
 

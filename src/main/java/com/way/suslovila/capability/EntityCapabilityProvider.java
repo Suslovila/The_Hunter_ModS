@@ -1,4 +1,5 @@
-package com.way.suslovila.effects.rainyaura;
+package com.way.suslovila.capability;
+
 
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -12,18 +13,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-//copied from other CAPA
-public class RainyAuraCapProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
 
-    public static Capability<RainyAuraStorage> BLOCKS = CapabilityManager.get(new CapabilityToken<>(){});
+public class EntityCapabilityProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
 
-    private RainyAuraStorage blocksInCap = null;
-    private final LazyOptional<RainyAuraStorage> opt = LazyOptional.of(this::createBag);
+    public static Capability<EntityCapabilityStorage> BLOCKS = CapabilityManager.get(new CapabilityToken<>(){});
+
+    private EntityCapabilityStorage blocksInCap = null;
+    private final LazyOptional<EntityCapabilityStorage> opt = LazyOptional.of(this::createBag);
 
     @Nonnull
-    private RainyAuraStorage createBag() {
+    private EntityCapabilityStorage createBag() {
         if (blocksInCap == null) {
-            blocksInCap = new RainyAuraStorage();
+            blocksInCap = new EntityCapabilityStorage();
         }
         return blocksInCap;
     }

@@ -1,6 +1,7 @@
 package com.way.suslovila.event;
 
 import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
+import com.way.suslovila.item.RainyAuraTalisman.WaterShieldLayer;
 import com.way.suslovila.particles.*;
 import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.entity.ModEntityTypes;
@@ -9,9 +10,10 @@ import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.savedData.IsTheVictim.MessagesBoolean;
 import com.way.suslovila.savedData.arrow.MessagesForArrow;
-import com.way.suslovila.savedData.clientSynch.MessageForRainyAura;
 import com.way.suslovila.savedData.clientSynch.Messages;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.event.RegistryEvent;
@@ -23,17 +25,12 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = MysticalCreatures.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class ModEventBusEvents {
+public class ModEventBusEventsAll {
 
     @SubscribeEvent
-    public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>>
-                                                           event) {
-        event.getRegistry().registerAll(
-
-        );
+    public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
+        event.getRegistry().registerAll();
     }
-
-
     @SubscribeEvent
     public static void entityAttributeEvent(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.HUNTER.get(), HunterEntity.setAttributes());
@@ -56,6 +53,6 @@ public class ModEventBusEvents {
         Messages.register();
         MessagesBoolean.register();
         MessagesForArrow.register();
-        MessageForRainyAura.register();
     }
+
 }

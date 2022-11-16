@@ -3,12 +3,17 @@ package com.way.suslovila.item.RainyAuraTalisman;
 import com.way.suslovila.effects.ModEffects;
 import com.way.suslovila.effects.rainyaura.RainyAuraCapProvider;
 import com.way.suslovila.effects.rainyaura.RainyAuraStorage;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
@@ -33,7 +38,6 @@ import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class RainyAuraTalismanItem extends Item {
@@ -43,16 +47,26 @@ public class RainyAuraTalismanItem extends Item {
         super(pProperties);
     }
 
+@Override
+public Component getName(ItemStack pStack) {
+    return new TranslatableComponent(this.getDescriptionId(pStack)).withStyle(ChatFormatting.DARK_AQUA);
+}
+
     @Override
     public void inventoryTick(ItemStack stack, Level level, Entity entityWithAnItem, int slotId, boolean isSelected) {
         if (!entityWithAnItem.level.isClientSide() && stack.getCapability(RainyAuraCapProvider.BLOCKS).isPresent()) {
+            if(stack.getTag() != null) System.out.println("extinguishFire: " + stack.getTag().getBoolean("extinguishFire"));
+            if(stack.getTag() != null) System.out.println("extinguishLava: " + stack.getTag().getBoolean("extinguishLava"));
+            if(stack.getTag() != null) System.out.println("extinguishEntity: " + stack.getTag().getBoolean("extinguishEntity"));
+            if(stack.getTag() != null) System.out.println("protectYourself: " + stack.getTag().getBoolean("protectYourself"));
+            if(stack.getTag() != null) System.out.println("collectWater: " + stack.getTag().getBoolean("collectWater"));
 
             LazyOptional<RainyAuraStorage> rainyAuraCapProvider = stack.getCapability(RainyAuraCapProvider.BLOCKS);
-            int mode = stack.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getMode).get();
+            boolean mode = stack.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getIsActive).get();
 //            long energy = stack.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getEnergy).get();
             long maxEnergy = rainyAuraCapProvider.map(RainyAuraStorage::getMaxEnergy).get();
             Supplier<Long> getEnergy = () -> stack.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getEnergy).get();
-            Supplier<Integer> getMode = () -> stack.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getMode).get();
+            Supplier<Boolean> getMode = () -> stack.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getIsActive).get();
 
             stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
                 capa.setMaxEnergy(10000);
@@ -64,19 +78,19 @@ public class RainyAuraTalismanItem extends Item {
             Supplier<HashMap<Integer, Integer>> getEntitiesFromCap = () -> stack.getCapability(RainyAuraCapProvider.BLOCKS).map(RainyAuraStorage::getEntities).get();
 
             int modifier = getModifierAccordingToWorld(level);
-            System.out.println("Mode: " + mode);
-            System.out.println("Actual Energy: " + getEnergy.get());
-            System.out.println("MaxEnergy: " + maxEnergy);
-            System.out.println("Blocks: " + blocksFromCap);
-            System.out.println("Entities: " + entitiesFromCap);
-            System.out.println("Modifier: " + modifier);
+//            System.out.println("Mode: " + mode);
+//            System.out.println("Actual Energy: " + getEnergy.get());
+//            System.out.println("MaxEnergy: " + maxEnergy);
+////            System.out.println("Blocks: " + blocksFromCap);
+////            System.out.println("Entities: " + entitiesFromCap);
+//            System.out.println("Modifier: " + modifier);
 
 
             //writing info to tag
             CompoundTag tag = stack.getOrCreateTag();
             tag.putLong("energyamount", getEnergy.get());
             tag.putLong("maxenergy", maxEnergy);
-            tag.putInt("actualmode", mode);
+            tag.putBoolean("actualmode", mode);
             ListTag listTag = new ListTag();
             ArrayList<BlockPos> blocksForTag = new ArrayList<>(rainyAuraCapProvider.map(RainyAuraStorage::getMapOfBlocks).get().keySet());
             ArrayList<Integer> entitiesForTag = new ArrayList<>(rainyAuraCapProvider.map(RainyAuraStorage::getEntities).get().keySet());
@@ -100,50 +114,14 @@ public class RainyAuraTalismanItem extends Item {
             tag.put("entitynear", listTagForEntity);
 
 
-            if (getMode.get() == 3) {
-                //nothing to do, talisman is off
-            }
-            if (getMode.get() == 2) {
-                //passively collecting water
-                if (entityWithAnItem.isInWaterRainOrBubble()) {
-                    stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
-                        capa.addEnergy(1);
-                    });
-                }
-            }
-            if (getMode.get() == 1) {
-                //protection mode
-                if (entityWithAnItem.isInWaterRainOrBubble()) {
-                    stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
-                        capa.addEnergy(1);
-                    });
-                }
-                if (entityWithAnItem.isOnFire()) {
-                    if (getEnergy.get() >= EnergyForDifferentActions.WATER_SHIELD.amount * modifier) {
-                        entityWithAnItem.clearFire();
-                        if (!(entityWithAnItem instanceof LivingEntity)) {
-                            stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
-                                capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier);
-                            });
-                        } else {
-                            if (((LivingEntity) entityWithAnItem).hasEffect(ModEffects.HELLISH_FLAMES.get()))
-                                ((LivingEntity) entityWithAnItem).removeEffect(ModEffects.HELLISH_FLAMES.get());
-                            ((LivingEntity) entityWithAnItem).addEffect(new MobEffectInstance(ModEffects.RAINY_AURA.get(), 100, 0, false, false));
-                            stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
-                                capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier);
-                            });
-                        }
-                    }
-                }
-            }
-            if (getMode.get() == 0) {
+            if (getMode.get()) {
                 //full mode
-                if (entityWithAnItem.isInWaterRainOrBubble()) {
+                if (entityWithAnItem.isInWaterRainOrBubble() && stack.getTag().getBoolean("collectWater")) {
                     stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
                         capa.addEnergy(1);
                     });
                 }
-                if (entityWithAnItem.isOnFire()) {
+                if (entityWithAnItem.isOnFire() && stack.getTag().getBoolean("protectYourself")) {
                     if (getEnergy.get() >= EnergyForDifferentActions.WATER_SHIELD.amount * modifier) {
                         entityWithAnItem.clearFire();
                         if (!(entityWithAnItem instanceof LivingEntity)) {
@@ -153,137 +131,142 @@ public class RainyAuraTalismanItem extends Item {
                         } else {
                             if (((LivingEntity) entityWithAnItem).hasEffect(ModEffects.HELLISH_FLAMES.get()))
                                 ((LivingEntity) entityWithAnItem).removeEffect(ModEffects.HELLISH_FLAMES.get());
-                            ((LivingEntity) entityWithAnItem).addEffect(new MobEffectInstance(ModEffects.RAINY_AURA.get(), 100, 0, false, false));
+                            ((LivingEntity) entityWithAnItem).addEffect(new MobEffectInstance(ModEffects.WATER_SHIELD.get(), 100, 0, false, false));
                             stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
                                 capa.reduceEnergy(EnergyForDifferentActions.WATER_SHIELD.amount * modifier);
                             });
                         }
                     }
                 }
-            }
 
-            BlockPos checkBlock;
-            int distanceXZY = 7;
-            for (int x = entityWithAnItem.getBlockX() - distanceXZY; x < entityWithAnItem.getBlockX() + distanceXZY; x++) {
-                for (int y = entityWithAnItem.getBlockY() - distanceXZY; y < entityWithAnItem.getBlockY() + distanceXZY; y++) {
-                    for (int z = entityWithAnItem.getBlockZ() - distanceXZY; z < entityWithAnItem.getBlockZ() + distanceXZY; z++) {
-                        checkBlock = new BlockPos(x, y, z);
-                        Block block = entityWithAnItem.level.getBlockState(checkBlock).getBlock();
-                        if (!getBlocksFromCap.get().containsKey(checkBlock) && (((block == Blocks.FIRE || block == Blocks.SOUL_FIRE) && getEnergy.get() >= EnergyForDifferentActions.EXTINGUISHING_THE_FIRE.amount * modifier) || (getEnergy.get() >= EnergyForDifferentActions.EXTINGUISHING_LAVA.amount * modifier && block == Blocks.LAVA))) {
-                            BlockPos finalCheckBlock = checkBlock;
-                            stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(blocksInCapa -> {
-                                blocksInCapa.addBlockPos(finalCheckBlock, 0);
-                            });
-                            entityWithAnItem.level.playSound(null, finalCheckBlock.getX(), finalCheckBlock.getY(), finalCheckBlock.getZ(), SoundEvents.WEATHER_RAIN, SoundSource.AMBIENT, 0.5F, 1.0F);
+
+                BlockPos checkBlock;
+                int distanceXZY = 7;
+                for (int x = entityWithAnItem.getBlockX() - distanceXZY; x < entityWithAnItem.getBlockX() + distanceXZY; x++) {
+                    for (int y = entityWithAnItem.getBlockY() - distanceXZY; y < entityWithAnItem.getBlockY() + distanceXZY; y++) {
+                        for (int z = entityWithAnItem.getBlockZ() - distanceXZY; z < entityWithAnItem.getBlockZ() + distanceXZY; z++) {
+                            checkBlock = new BlockPos(x, y, z);
+                            Block block = entityWithAnItem.level.getBlockState(checkBlock).getBlock();
+                            if (!getBlocksFromCap.get().containsKey(checkBlock) && (((block == Blocks.FIRE || block == Blocks.SOUL_FIRE) && getEnergy.get() >= EnergyForDifferentActions.EXTINGUISHING_THE_FIRE.amount * modifier && tag.getBoolean("extinguishFire")) || (getEnergy.get() >= EnergyForDifferentActions.EXTINGUISHING_LAVA.amount * modifier && block == Blocks.LAVA  && tag.getBoolean("extinguishLava")))) {
+                                BlockPos finalCheckBlock = checkBlock;
+                                stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(blocksInCapa -> {
+                                    blocksInCapa.addBlockPos(finalCheckBlock, 0);
+                                });
+                                entityWithAnItem.level.playSound(null, finalCheckBlock.getX(), finalCheckBlock.getY(), finalCheckBlock.getZ(), SoundEvents.WEATHER_RAIN, SoundSource.AMBIENT, 0.5F, 1.0F);
+                            }
                         }
                     }
                 }
-            }
-            List<Entity> entityList = entityWithAnItem.level.getEntities(entityWithAnItem, new AABB(entityWithAnItem.getX() + 7, entityWithAnItem.getY() + 7, entityWithAnItem.getZ() + 7, entityWithAnItem.getX() - 7, entityWithAnItem.getY() - 7, entityWithAnItem.getZ() - 7));
-            for (int i = 0; i < entityList.size(); i++) {
-                if (entityList.get(i).isOnFire() && !getEntitiesFromCap.get().containsKey(entityList.get(i).getId()) && getEnergy.get() >= EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier) {
-                    int finalI = i;
-                    stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(entitiesInCapa -> {
-                        entitiesInCapa.addEntity(entityList.get(finalI).getId(), 0);
+                if(tag.getBoolean("extinguishEntity")) {
+                    List<Entity> entityList = entityWithAnItem.level.getEntities(entityWithAnItem, new AABB(entityWithAnItem.getX() + 7, entityWithAnItem.getY() + 7, entityWithAnItem.getZ() + 7, entityWithAnItem.getX() - 7, entityWithAnItem.getY() - 7, entityWithAnItem.getZ() - 7));
+                    for (int i = 0; i < entityList.size(); i++) {
+                        if (entityList.get(i).isOnFire() && !getEntitiesFromCap.get().containsKey(entityList.get(i).getId()) && getEnergy.get() >= EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier) {
+                            int finalI = i;
+                            stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(entitiesInCapa -> {
+                                entitiesInCapa.addEntity(entityList.get(finalI).getId(), 0);
 
-                    });
-                }
-            }
-
-
-            System.out.println(getBlocksFromCap.get());
-            HashMap<BlockPos, Integer> blocksFromCap20 = (HashMap<BlockPos, Integer>) getBlocksFromCap.get().clone();
-            Iterator<BlockPos> iteratorBlock = blocksFromCap20.keySet().iterator();
-            while (iteratorBlock.hasNext()) {
-                BlockPos pos = iteratorBlock.next();
-                if (pos != null) {
-                    Block block = entityWithAnItem.level.getBlockState(pos).getBlock();
-
-                    if (!(block == Blocks.FIRE || block == Blocks.SOUL_FIRE || block == Blocks.LAVA)) {
-                        stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(blocks -> {
-                            blocks.removeBlock(pos);
-                        });
-                    } else {
-                        stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
-                            System.out.print("Entering Lambda     ");
-                            int timer = getBlocksFromCap.get().get(pos);
-                            System.out.print("Here is the Timer : " + timer + "     ");
-                            if (timer > 22) {
-                                capa.removeBlock(pos);
-                                if (capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_THE_FIRE.amount * modifier) && (block == Blocks.FIRE || block == Blocks.SOUL_FIRE)) {
-                                    entityWithAnItem.level.playSound(null, pos.getX(), pos.getY(), pos.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
-                                    entityWithAnItem.level.removeBlock(pos, false);
-                                }
-                                if (block == Blocks.LAVA && (capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_LAVA.amount))) {
-                                    entityWithAnItem.level.playSound(null, pos.getX(), pos.getY(), pos.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
-                                    entityWithAnItem.level.setBlockAndUpdate(pos, Blocks.OBSIDIAN.defaultBlockState());
-                                }
-                            } else {
-                                System.out.print("      Timer Is not equal or more than 25       ");
-                                capa.addBlockPos(pos, timer + 1);
-                            }
-                            if (Math.sqrt(entityWithAnItem.blockPosition().distToCenterSqr(pos.getX(), pos.getY(), pos.getZ())) > 12.2D) {
-                                capa.removeBlock(pos);
-                                System.out.print("    Block Is Too Far    ");
-                            }
-                            System.out.println();
-                        });
+                            });
+                        }
                     }
-                }
-            }
-            System.out.println(entitiesFromCap);
-            HashMap<Integer, Integer> entitiesFromCap20 = (HashMap<Integer, Integer>) getEntitiesFromCap.get().clone();
-            Iterator<Integer> iteratorBlockEntity = entitiesFromCap20.keySet().iterator();
-            while (iteratorBlockEntity.hasNext()) {
-                int id = iteratorBlockEntity.next();
-                Entity entityInIterator = entityWithAnItem.level.getEntity(id);
-                if (entityInIterator != null) {
-                    if (!entityInIterator.isOnFire() || getEnergy.get() < EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier || !entityInIterator.isAlive() || entityWithAnItem.distanceTo(Objects.requireNonNull(entityInIterator)) > 7) {
-                        stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(blocks -> {
-                            blocks.removeEntity(id);
-                        });
-                    } else {
-                        stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
-                            int timer = capa.getEntities().get(id);
-                            if (timer <= 22) {
-                                System.out.println("Timer is less than 22");
-                                capa.addEntity(id, timer + 1);
+                    HashMap<Integer, Integer> entitiesFromCap20 = (HashMap<Integer, Integer>) getEntitiesFromCap.get().clone();
+                    Iterator<Integer> iteratorBlockEntity = entitiesFromCap20.keySet().iterator();
+                    while (iteratorBlockEntity.hasNext()) {
+                        int id = iteratorBlockEntity.next();
+                        Entity entityInIterator = entityWithAnItem.level.getEntity(id);
+                        if (entityInIterator != null) {
+                            if (!entityInIterator.isOnFire() || getEnergy.get() < EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier || !entityInIterator.isAlive() || entityWithAnItem.distanceTo(Objects.requireNonNull(entityInIterator)) > 7) {
+                                stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(blocks -> {
+                                    blocks.removeEntity(id);
+                                });
                             } else {
-                                System.out.println("Removing Entity, timer > 22");
+                                stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
+                                    int timer = capa.getEntities().get(id);
+                                    if (timer <= 22) {
+                                        System.out.println("Timer is less than 22");
+                                        capa.addEntity(id, timer + 1);
+                                    } else {
+                                        System.out.println("Removing Entity, timer > 22");
+                                        capa.removeEntity(id);
+                                        if (capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier)) {
+                                            entityInIterator.clearFire();
+                                            entityWithAnItem.level.playSound(null, entityWithAnItem.getX(), entityWithAnItem.getY(), entityWithAnItem.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
                                 capa.removeEntity(id);
-                                if (capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier)) {
-                                    entityInIterator.clearFire();
-                                    entityWithAnItem.level.playSound(null, entityWithAnItem.getX(), entityWithAnItem.getY(), entityWithAnItem.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
-                                }
-                            }
-                        });
+                            });
+                        }
                     }
-                } else {
-                    stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
-                        capa.removeEntity(id);
-                    });
                 }
+
+
+                HashMap<BlockPos, Integer> blocksFromCap20 = (HashMap<BlockPos, Integer>) getBlocksFromCap.get().clone();
+                Iterator<BlockPos> iteratorBlock = blocksFromCap20.keySet().iterator();
+                while (iteratorBlock.hasNext()) {
+                    BlockPos pos = iteratorBlock.next();
+                    if (pos != null) {
+                        Block block = entityWithAnItem.level.getBlockState(pos).getBlock();
+
+                        if (!((block == Blocks.FIRE || block == Blocks.SOUL_FIRE) && tag.getBoolean("extinguishFire") || (tag.getBoolean("extinguishLava") && block == Blocks.LAVA))) {
+                            stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(blocks -> {
+                                blocks.removeBlock(pos);
+                            });
+                        } else {
+                            stack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
+                                System.out.print("Entering Lambda     ");
+                                int timer = getBlocksFromCap.get().get(pos);
+                                System.out.print("Here is the Timer : " + timer + "     ");
+                                if (timer > 22) {
+                                    capa.removeBlock(pos);
+                                    if (capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_THE_FIRE.amount * modifier) && (block == Blocks.FIRE || block == Blocks.SOUL_FIRE)) {
+                                        entityWithAnItem.level.playSound(null, pos.getX(), pos.getY(), pos.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+                                        entityWithAnItem.level.removeBlock(pos, false);
+                                    }
+                                    if (block == Blocks.LAVA && (capa.reduceEnergy(EnergyForDifferentActions.EXTINGUISHING_LAVA.amount))) {
+                                        entityWithAnItem.level.playSound(null, pos.getX(), pos.getY(), pos.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+                                        entityWithAnItem.level.setBlockAndUpdate(pos, Blocks.OBSIDIAN.defaultBlockState());
+                                    }
+                                } else {
+                                    System.out.print("      Timer Is not equal or more than 25       ");
+                                    capa.addBlockPos(pos, timer + 1);
+                                }
+                                if (Math.sqrt(entityWithAnItem.blockPosition().distToCenterSqr(pos.getX(), pos.getY(), pos.getZ())) > 12.2D) {
+                                    capa.removeBlock(pos);
+                                    System.out.print("    Block Is Too Far    ");
+                                }
+                                System.out.println();
+                            });
+                        }
+                    }
+                }
+
             }
         }
-        if (level.isClientSide()) {
-            if (stack.getOrCreateTag().getInt("actualmode") == 0) {
+        if (level.isClientSide() && stack.getOrCreateTag().getBoolean("actualmode")) {
+
                 CompoundTag tag = stack.getOrCreateTag();
                 ListTag listTagForBlocks = tag.getList("blocksnear", Tag.TAG_COMPOUND);
                 for (int i = 0; i < listTagForBlocks.size(); i++) {
                     CompoundTag tag1 = listTagForBlocks.getCompound(i);
                     BlockPos blockPos = new BlockPos(tag1.getInt("x"), tag1.getInt("y"), tag1.getInt("z"));
-                    for (int g = 0; g < 2; g++) {
-                        double x1 = random.nextDouble(0, 0.5D);
-                        double z1 = random.nextDouble(0, 0.5D);
-                        if (random.nextBoolean()) {
-                            x1 = -x1;
+                    if((level.getBlockState(blockPos).getBlock() == Blocks.LAVA && tag.getBoolean("extinguishLava")) || (((level.getBlockState(blockPos).getBlock() == Blocks.FIRE) || (level.getBlockState(blockPos).getBlock() == Blocks.SOUL_FIRE)) && tag.getBoolean("extinguishFire"))) {
+                        for (int g = 0; g < 2; g++) {
+                            double x1 = random.nextDouble(0, 0.5D);
+                            double z1 = random.nextDouble(0, 0.5D);
+                            if (random.nextBoolean()) {
+                                x1 = -x1;
+                            }
+                            if (random.nextBoolean()) {
+                                z1 = -z1;
+                            }
+                            level.addParticle(ParticleTypes.FALLING_WATER, (double) blockPos.getX() + x1 + 0.5, (double) blockPos.getY() + random.nextDouble(1D, 2D), (double) blockPos.getZ() + z1 + 0.5, 0, 0, 0);
                         }
-                        if (random.nextBoolean()) {
-                            z1 = -z1;
-                        }
-                        level.addParticle(ParticleTypes.FALLING_WATER, (double) blockPos.getX() + x1 + 0.5, (double) blockPos.getY() + random.nextDouble(1D, 2D), (double) blockPos.getZ() + z1 + 0.5, 0, 0, 0);
                     }
                 }
+                if(tag.getBoolean("extinguishEntity")){
                 ListTag listTagForEntity = tag.getList("entitynear", Tag.TAG_COMPOUND);
                 for (int i = 0; i < listTagForEntity.size(); i++) {
                     //            CompoundTag tag1 = listTagForEntity.getCompound(i);
@@ -308,13 +291,23 @@ public class RainyAuraTalismanItem extends Item {
 
                         }
                     }
+                    }
                 }
-            }
         }
     }
 
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
+//        Style style = new Style();
         if (pLevel != null) {
+            int modifier = this.getModifierAccordingToWorld(pLevel);
+            if (Screen.hasShiftDown()) {
+                pTooltipComponents.add(new TextComponent("Energy for different actions: ").withStyle(ChatFormatting.BLUE));
+                pTooltipComponents.add(new TextComponent("Extinguish fire: " + EnergyForDifferentActions.EXTINGUISHING_THE_FIRE.amount * modifier).withStyle(ChatFormatting.AQUA));
+                pTooltipComponents.add(new TextComponent("Extinguish Entity: " + EnergyForDifferentActions.EXTINGUISHING_ENTITY.amount * modifier).withStyle(ChatFormatting.AQUA));
+                pTooltipComponents.add(new TextComponent("Extinguish lava: " + EnergyForDifferentActions.EXTINGUISHING_LAVA.amount * modifier).withStyle(ChatFormatting.AQUA));
+                pTooltipComponents.add(new TextComponent("Protect yourself: " + EnergyForDifferentActions.WATER_SHIELD.amount * modifier).withStyle(ChatFormatting.AQUA));
+            }
+            else pTooltipComponents.add(new TextComponent("Energy: " + pStack.getOrCreateTag().getLong("energyamount") + "/" + pStack.getOrCreateTag().getLong("maxenergy")));
 
         }
     }
@@ -327,10 +320,14 @@ public class RainyAuraTalismanItem extends Item {
         ItemStack itemstack = pPlayer.getItemInHand(pHand);
 
         HitResult hitresult = getPlayerPOVHitResult(pLevel, pPlayer, ClipContext.Fluid.SOURCE_ONLY);
-        if (hitresult.getType() == HitResult.Type.MISS && pPlayer.isShiftKeyDown()) {
-            if (!pLevel.isClientSide())
-                itemstack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(RainyAuraStorage::changeMode);
+        if (hitresult.getType() == HitResult.Type.MISS) {
+            if (pPlayer.isShiftKeyDown() && !pLevel.isClientSide()) itemstack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(RainyAuraStorage::toggleOnOff);
+            if(!pPlayer.isShiftKeyDown() && pLevel.isClientSide()) Minecraft.getInstance().setScreen(new RainyAuraTalismanScreen(pPlayer, itemstack, pHand));
+
             return InteractionResultHolder.sidedSuccess(itemstack, pLevel.isClientSide());
+
+
+
         } else {
             if (hitresult.getType() == HitResult.Type.BLOCK) {
                 BlockPos blockpos = ((BlockHitResult) hitresult).getBlockPos();
@@ -344,7 +341,7 @@ public class RainyAuraTalismanItem extends Item {
                         itemstack.getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(capa -> {
                             capa.addEnergy(EnergyForDifferentActions.EXTINGUISHING_LAVA.amount);
                         });
-                        pLevel.removeBlock(blockpos, false);
+                        pLevel.setBlockAndUpdate(blockpos, Blocks.AIR.defaultBlockState());
                     }
                     return InteractionResultHolder.sidedSuccess(itemstack, pLevel.isClientSide());
                 }
@@ -354,7 +351,7 @@ public class RainyAuraTalismanItem extends Item {
     }
 
     public enum EnergyForDifferentActions {
-        ACTIVATION_MINIMUM(500),
+//        ACTIVATION_MINIMUM(500),
         WATER_SHIELD(1000),
         EXTINGUISHING_LAVA(400),
         EXTINGUISHING_THE_FIRE(200),

@@ -10,7 +10,7 @@ import com.way.suslovila.entity.projectile.explosionArrow.RenderExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.RenderSpeedArrow;
 import com.way.suslovila.entity.shadowGrapEntity.RenderShadowGrab;
 import com.way.suslovila.entity.shadowgardenentity.RenderShadowGarden;
-import com.way.suslovila.event.ModEventBusEvents;
+import com.way.suslovila.event.ModEventBusEventsAll;
 import com.way.suslovila.event.ServerProxy;
 import com.way.suslovila.event.client.ClientProxy;
 import com.way.suslovila.particles.ModParticles;
@@ -59,7 +59,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.network.simple.SimpleChannel;
 import net.minecraftforge.registries.*;
 import org.slf4j.Logger;
 import software.bernie.geckolib3.GeckoLib;
@@ -71,6 +74,10 @@ import java.util.function.Consumer;
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(MysticalCreatures.MOD_ID)
 public class MysticalCreatures {
+    ServerProxy PROXY;
+    public static SimpleChannel NETWORK;
+
+
     public static final String MOD_ID = "mysticalcreatures";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -118,7 +125,7 @@ public class MysticalCreatures {
         ModEffects.register(bus);
         ModParticles.register(eventBus);
         ParticleHandler.register(eventBus);
-        ServerProxy PROXY = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
+        PROXY = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
         PROXY.init(bus);
 
 
@@ -131,7 +138,7 @@ public class MysticalCreatures {
 
         bus.addListener(this::clientStuff);
         bus.addListener(Generator::gatherData);
-        eventBus.addListener(ModEventBusEvents::init);
+        eventBus.addListener(ModEventBusEventsAll::init);
 
 
         MinecraftForge.EVENT_BUS.addListener(this::pickupEvent);
@@ -139,6 +146,9 @@ public class MysticalCreatures {
 
         BackpackUtils.curiosLoaded = ModList.get().isLoaded("curios");
         RecipeUnlocker.register(MysticalCreatures.MOD_ID, MinecraftForge.EVENT_BUS, 2);
+        bus.<FMLCommonSetupEvent>addListener(this::init);
+        bus.<FMLLoadCompleteEvent>addListener(this::init);
+
 
     }
 
@@ -210,19 +220,14 @@ public class MysticalCreatures {
     private void onConfigReload(ModConfigEvent event) {
         ConfigCache.RefreshCache();
     }
+        private void init(FMLLoadCompleteEvent event) {
+            final IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+            PROXY.onLateInit(bus);
 
+        }
+    public void init(final FMLCommonSetupEvent event) {
 
+        PROXY.initNetwork();
 
-
-
-
-
-
-
-
-
-
-
-
-
+    }
 }

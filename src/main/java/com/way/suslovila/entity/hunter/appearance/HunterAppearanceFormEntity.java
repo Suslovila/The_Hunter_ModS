@@ -82,8 +82,7 @@ if(!level.isClientSide()) {
     }
 }
         else{
-            int chance = random.nextInt(5);
-            if(chance == 2){
+            if(random.nextInt(5) == 2){
                 double deltaX = random.nextDouble(0.8D, 1.5D);
                 double deltaZ = random.nextDouble(0.8D, 1.5D);
                 if(random.nextBoolean())deltaX = -deltaX;
