@@ -17,6 +17,7 @@ import software.bernie.geckolib3.model.AnimatedTickingGeoModel;
 import javax.annotation.Nullable;
 
 public class HunterModel extends AnimatedTickingGeoModel<HunterEntity> {
+    //todo: доделать перебор блоков взрывной стрелой
     @Override
     public ResourceLocation getModelLocation(HunterEntity object) {
         return new ResourceLocation(MysticalCreatures.MOD_ID, "geo/hunter.geo.json");
@@ -48,9 +49,8 @@ public class HunterModel extends AnimatedTickingGeoModel<HunterEntity> {
                 Vec3 vec = new Vec3(entity.getXCoordToAim(), entity.getYCoordToAim(), entity.getZCoordToAim());
                 if (entity.isAlive() && !Minecraft.getInstance().isPaused()) {
                     ((HunterEntity) entity).lookAtVictim(EntityAnchorArgument.Anchor.FEET, entity.level.getPlayerByUUID(ClientVictimData.getVictim()).getEyePosition(), this.getAnimationProcessor().getBone("hunter_teleport_form"), this.getAnimationProcessor().getBone("head2"));
-                    if (((HunterEntity) entity).getShouldRotateHandsForShooting()) {
                         ((HunterEntity) entity).aimBowAtVictim(EntityAnchorArgument.Anchor.FEET, vec, this.getAnimationProcessor().getBone("leftArm"), this.getAnimationProcessor().getBone("rightArm"), this.getAnimationProcessor().getBone("palm"));
-                    }
+
                 }
         }
     }

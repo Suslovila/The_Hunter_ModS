@@ -26,7 +26,7 @@ public class RenderShadowGrab extends GeoEntityRenderer<ShadowGrabEntity> {
     public RenderType getRenderType(ShadowGrabEntity animatable, float partialTicks, PoseStack stack,
                                     MultiBufferSource renderTypeBuffer, VertexConsumer vertexBuilder, int packedLightIn,
                                     ResourceLocation textureLocation) {
-        stack.scale(0.82F, 0.82F, 0.82F);
+        stack.scale(1F, 1F, 1F);
         return super.getRenderType(animatable, partialTicks, stack, renderTypeBuffer, vertexBuilder, packedLightIn, textureLocation);
     }
 }

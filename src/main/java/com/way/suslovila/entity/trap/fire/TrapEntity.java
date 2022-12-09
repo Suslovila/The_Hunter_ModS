@@ -73,7 +73,7 @@ public class TrapEntity extends PathfinderMob implements IAnimatable {
 */
         if (now) {
             previousCapt = now;
-            System.out.println(previousCapt);
+           // System.out.println(previousCapt);
             event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.trap.catched", true));
             return PlayState.CONTINUE;
         }

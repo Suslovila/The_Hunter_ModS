@@ -4,20 +4,19 @@ import com.way.suslovila.entity.ModEntityTypes;
 import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
+import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
 import com.way.suslovila.savedData.HuntersHP;
-import com.way.suslovila.savedData.IsTheVictim.MessagesBoolean;
-import com.way.suslovila.savedData.IsTheVictim.PacketSyncVictimToClientBoolean;
 import com.way.suslovila.savedData.SaveVictim;
 import com.way.suslovila.savedData.arrow.MessagesForArrow;
 import com.way.suslovila.savedData.arrow.PacketSpawnArrow;
 import com.way.suslovila.savedData.clientSynch.Messages;
-import com.way.suslovila.savedData.clientSynch.PacketSyncRainyAuraToClient;
 import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -26,17 +25,13 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.ai.goal.*;
-import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.Shapes;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.IAnimationTickable;
 import software.bernie.geckolib3.core.PlayState;
@@ -53,7 +48,7 @@ import java.util.*;
 
 
 public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimationTickable {
-
+        public static float maxLight = 0.26f;
     private static final EntityDataAccessor<String> UUIDOFGRABENTITY = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.STRING);
 
     private static final EntityDataAccessor<Boolean> ISSTUCKED = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.BOOLEAN);
@@ -70,6 +65,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
     private static final EntityDataAccessor<Integer> TIMER_FOR_SUMMONING_SHADOWS = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> ISSUMMONINGSHADOWS = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.BOOLEAN);
 
+    private static final EntityDataAccessor<Integer> TIMER_FOR_CONTROLLING_SHADOWS = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 
     private double XVictimPos = 0;
     private double YVictimPos = 0;
@@ -101,69 +97,37 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
     }
 
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new FloatGoal(this));
-//        this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.targetSelector.addGoal(6, (new HurtByTargetGoal(this)));
+//        this.goalSelector.addGoal(1, new FloatGoal(this));
+////        this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
+//        this.targetSelector.addGoal(6, (new HurtByTargetGoal(this)));
     }
 
 
 
     private <E extends IAnimatable> PlayState predicateForUnderLight(AnimationEvent<E> event) {
-//        System.out.println(event.getController().getAnimationState());
-//        if (this.getVulnarble()) {
-//            if (event.getController().getCurrentAnimation() != null) {
-////                System.out.println(event.getController().getCurrentAnimation().animationName);
-//                if ((Objects.equals(event.getController().getCurrentAnimation().animationName, "hunter.animation.underlight") && event.getController().getAnimationState().equals(AnimationState.Stopped)) || (Objects.equals(event.getController().getCurrentAnimation().animationName, "hunter.animation.underlightbreath") && !event.getController().getAnimationState().equals(AnimationState.Stopped))) {
-//                    event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.underlightbreath", true));
-//                    return PlayState.CONTINUE;
-//                }
-//            }
-////            System.out.println("vulnarable status");
-//                event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.underlight", false));
-//            return PlayState.CONTINUE;
-
-
+        if (event.getController().getCurrentAnimation() != null)
+        System.out.println("Animation in code playing now: " + event.getController().getCurrentAnimation().animationName);
         if(this.getVulnarble()) {
+
             if(!getShouldLoopBreath()){
+                System.out.println("Playing falling anim");
                 event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.underlight", false));
-                    return PlayState.CONTINUE;
             }
             else{
+                System.out.println("Playing breath anim");
                 event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.underlightbreath", true));
-                return PlayState.CONTINUE;
             }
+            return PlayState.CONTINUE;
         }
-
+        event.getController().markNeedsReload();
         return PlayState.STOP;
 
     }
 
 
     private <E extends IAnimatable> PlayState predicateForShooting(AnimationEvent<E> event) {
-
-//        if (getShooting()) {
-//            if (event.getController().getCurrentAnimation() != null) {
-//                if ((Objects.equals(event.getController().getCurrentAnimation().animationName, "hunter.animation.preparetoshoot") && event.getController().getAnimationState().equals(AnimationState.Stopped)) || (Objects.equals(event.getController().getCurrentAnimation().animationName, "hunter.animation.shoot")&& !event.getController().getAnimationState().equals(AnimationState.Stopped))) {
-//                    event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.shoot", true));
-//                    if (event.getAnimationTick() - event.getController().tickOffset > 54 && event.getAnimationTick() - event.getController().tickOffset<66){
-//                         setShouldRotateHandsForShooting(true);
-//                    }
-//                    else{
-//                        setShouldRotateHandsForShooting(false);
-//                    }
-//                    if((event.getAnimationTick() - event.getController().tickOffset == 64 || event.getAnimationTick() - event.getController().tickOffset == 65)){
-//                        MessagesForArrow.sendToServer(new PacketSpawnArrow(true));
-//                        System.out.println("sendedInfo");
-//                    }
-//                    return PlayState.CONTINUE;
-//                }
-//
-//            }
-//                event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.preparetoshoot", false));
-//                return PlayState.CONTINUE;
-//        }
-
         if(getShooting()) {
+            System.out.println("Playing shooting anim");
             if (!getShouldLoopShoot()) {
                 event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.preparetoshoot", false));
                 return PlayState.CONTINUE;
@@ -196,6 +160,24 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
         if(!getShooting() || event.getController().getAnimationState().equals(PlayState.STOP)){
             setShouldRotateHandsForShooting(false);
         }
+        event.getController().markNeedsReload();
+        return PlayState.STOP;
+    }
+
+    private <E extends IAnimatable> PlayState predicateForShadowGrab(AnimationEvent<E> event) {
+        if(getShouldLoopContollingShadows()) {
+            System.out.println("Plaing controlling s anymation");
+            event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.grab", true));
+            return PlayState.CONTINUE;
+        }
+            if(getIsSummoningShadows()) {
+                System.out.println("Playing summon shadows anim");
+                if (((HunterEntity) event.getAnimatable()).getTimerForSummoningShadows() >= 0 && ((HunterEntity) event.getAnimatable()).getTimerForSummoningShadows() < 30) {
+                    event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation.prepareforgrab", false));
+                    return PlayState.CONTINUE;
+                }
+        }
+        event.getController().markNeedsReload();
         return PlayState.STOP;
     }
     @SuppressWarnings("resource")
@@ -209,9 +191,12 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                 0, this::predicateForShooting);
         AnimationController controller2 = new AnimationController(this, "controllerforunderlight",
                 0, this::predicateForUnderLight);
+        AnimationController controller3 = new AnimationController(this, "controllerforshadowgrab",
+                0, this::predicateForShadowGrab);
         controller1.registerCustomInstructionListener(this::customListener1);
         data.addAnimationController(controller1);
         data.addAnimationController(controller2);
+        data.addAnimationController(controller3);
     }
 
 
@@ -233,6 +218,19 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
 //        System.out.println(this.getYRot());
 //        System.out.println(this.getYHeadRot());
         if (!level.isClientSide()) {
+            System.out.println("Is looping breath: " + getShouldLoopBreath());
+            System.out.println("Timer for falling: " + getTimerForFalling());
+            System.out.println("Timer for shooting: " + getTimeForShooting());
+            System.out.println("Is Vulnarable: " + getVulnarble());
+            System.out.println("is Shooting: " + getShooting());
+            System.out.println("Should loop shoot: " + getShouldLoopShoot());
+            System.out.println("Is summoning shadows: " + getIsSummoningShadows());
+            System.out.println("Should loop controlling shadows: " + getShouldLoopContollingShadows());
+            System.out.println("Timer for controlling: " + getTimerForControllingShadows());
+            System.out.println("Timer for summoning: " + getTimerForSummoningShadows());
+            System.out.println("Should rotate hands: " + getShouldRotateHandsForShooting());
+            System.out.println("Timer for preparing: " + getTimerForPreparing());
+
 //working with arrows:
 //            System.out.println("Is shooting: " + getShooting());
 //            System.out.println("Timer for shooting: " + getTimeForShooting());
@@ -244,40 +242,74 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
 
 
 //            System.out.println(HuntersHP.get(this.level).getHunterHP());
+            //if there is no victim in world:
             if (SaveVictim.get(this.level).getVictim().equals("novictim")) {
                 this.disappearInShadows();
             } else{
-             if (this.getBrightness() > 0.75f) {
+                //if it is too bright for Hunter:
+             if (this.getBrightness() > maxLight) {
                  setVulnarable(true);
+
                   setShooting(false);
                   setTimeForShooting(0);
                   setShouldLoopShoot(false);
                   setTimerForPreparing(0);
+
                   setTimerForSummoningShadows(0);
                   setIssummoningshadows(false);
                   setShouldloopcontrollingshadows(false);
-           } else {
-                 if (getTimeForShooting() == 72 && level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim())).distanceToSqr(XVictimPos, YVictimPos, ZVictimPos) < 0.1) {
-                     setIssummoningshadows(true);
+                  setTimerForControllingShadows(0);
 
-                     setVulnarable(false);
-                     setShouldLoopBreath(false);
-                     setTimerForFalling(0);
+           } else {
+                 setVulnarable(false);
+                 setShouldLoopBreath(false);
+                 setTimerForFalling(0);
+                 //if player is not moving, Hunter will try to catch him with shadows:
+                 if (getTimeForShooting() == 72 && Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()))).getEyePosition().distanceTo(new Vec3(getXCoordToAim(), getYCoordToAim(), getZCoordToAim()))< 0.1) {
+
+                     setIssummoningshadows(true);
+                     setShouldloopcontrollingshadows(false);
+                     setTimerForSummoningShadows(0);
+
+                    // setVulnarable(false);
+                     //setShouldLoopBreath(false);
+                     //setTimerForFalling(0);
 
                      setShooting(false);
                      setShouldLoopShoot(false);
                      setTimerForPreparing(0);
                      setTimeForShooting(0);
 
-                 } else {
-                     setVulnarable(false);
-                     setShouldLoopBreath(false);
-                     setTimerForFalling(0);
-                     setTimerForSummoningShadows(0);
-                     setIssummoningshadows(false);
-                     setShouldloopcontrollingshadows(false);
+                     ShadowGrabEntity shadowGrabEntity = new ShadowGrabEntity(ModEntityTypes.SHADOW_GRAB.get(), level);
+                     shadowGrabEntity.getEntityData().set(ShadowGrabEntity.OWNER, this.getUUID().toString());
+                     shadowGrabEntity.setPos(Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()))).position());
+                     level.addFreshEntity(shadowGrabEntity);
+                     setGrabUUID(shadowGrabEntity.getUUID().toString());
+
 
                  }
+
+                    if(Objects.equals(getGrabUUID(), "NoGrabEntity") ||((ServerLevel)level).getEntity(UUID.fromString(getGrabUUID())) == null|| ((((ServerLevel)level).getEntity(UUID.fromString(getGrabUUID())))!= null &&!(((ServerLevel)level).getEntity(UUID.fromString(getGrabUUID()))).isAlive())){
+                        setIssummoningshadows(false);
+                        setTimerForSummoningShadows(0);
+                        setTimerForControllingShadows(0);
+                        setShouldloopcontrollingshadows(false);
+                    }
+
+//                 else {
+//                     if(!getIsSummoningShadows() && !getShouldLoopContollingShadows()) {
+//                         //setVulnarable(false);
+//                         //setShouldLoopBreath(false);
+//                        // setTimerForFalling(0);
+//                         setTimerForSummoningShadows(0);
+//                         setIssummoningshadows(false);
+//                         setShouldloopcontrollingshadows(false);
+//                         setTimerForControllingShadows(0);
+//                     }
+//                 }
+
+
+
              }
                 boolean isVictimHere = false;
                 List<Entity> entities = level.getEntities(this, new AABB(this.getX() - 40.0D, this.getY() - 40.0D, this.getZ() - 40.0D, this.getX() + 40.0D, this.getY() + 40.0D, this.getZ() + 40.0D), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
@@ -353,15 +385,28 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                     this.disappearInShadows();
                 }
                 if (isVictimHere) {
-                    if(!getVulnarble() && !getIsSummoningShadows()) {
+                    if(!getVulnarble()) {
                         Messages.sendToHunter(new PacketSyncVictimToClient(UUID.fromString(SaveVictim.get(this.level).getVictim())), this);
 //                        MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(true), this);
                         Player player = level.getPlayerByUUID(UUID.fromString(SaveVictim.get(this.level).getVictim()));
+                        assert player != null;
+                        EntityAnchorArgument.Anchor pAnchor = EntityAnchorArgument.Anchor.FEET;
+                        Vec3 pTarget = player.getEyePosition();
+                        Vec3 vec3 = pAnchor.apply(this);
+                        double dx = pTarget.x - vec3.x;
+                        double dz = pTarget.z - vec3.z;
+                        double angle = (-Math.toDegrees(((float)(Math.atan2(dx,dz)))));
+                        this.setYBodyRot((float)angle);
+                        this.getLookControl().setLookAt(player);
+
+
+
+
                         setXCoordToAim((float)player.getEyePosition().x);
                         setYCoordToAim((float)player.getEyePosition().y);
                         setZCoordToAim((float)player.getEyePosition().z);
 
-                        setShooting(true);
+                        if(!getIsSummoningShadows() && !getShouldLoopContollingShadows())setShooting(true);
                     }
                 }
             }
@@ -375,7 +420,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                         setTimerForPreparing(0);
                     }
                 }
-                if(getShouldLoopShoot()){
+                else{
                     setTimeForShooting((getTimeForShooting()+1));
                     if(getTimeForShooting()==73){
                         setTimeForShooting(0);
@@ -390,6 +435,22 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                         setTimerForFalling(0);
                     }
 
+                }
+            }
+            if(getIsSummoningShadows()){
+                //if(!getShouldLoopContollingShadows()){
+                    setTimerForSummoningShadows(getTimerForSummoningShadows() + 1);
+                    if(getTimerForSummoningShadows() >= 30){
+                        setShouldloopcontrollingshadows(true);
+                        setTimerForSummoningShadows(0);
+                        setIssummoningshadows(false);
+                    }
+               // }
+                if(getShouldLoopContollingShadows()){
+                    setTimerForControllingShadows((getTimerForControllingShadows()+1));
+                    if(getTimerForControllingShadows()==20){
+                        setTimerForSummoningShadows(0);
+                    }
                 }
             }
         }
@@ -475,16 +536,20 @@ public void disappearInShadows(){
 
         getEntityData().define(TIMER_FOR_SUMMONING_SHADOWS,0);
         getEntityData().define(ISSUMMONINGSHADOWS,false);
+        getEntityData().define(TIMER_FOR_CONTROLLING_SHADOWS,0);
         getEntityData().define(SHOULDLOOPCONTROLLINGSHADOWS,false);
-
-
     }
     //lots of data methods
+    public String getGrabUUID(){return (getEntityData().get(UUIDOFGRABENTITY));}
+    public void setGrabUUID(String uuid){getEntityData().set(UUIDOFGRABENTITY, uuid);}
+
+    public int getTimerForControllingShadows(){return getEntityData().get(TIMER_FOR_CONTROLLING_SHADOWS);}
+    public void setTimerForControllingShadows(int k){getEntityData().set(TIMER_FOR_CONTROLLING_SHADOWS, k);}
     public boolean getShouldLoopContollingShadows(){
         return getEntityData().get(SHOULDLOOPCONTROLLINGSHADOWS);
     }
     public void setShouldloopcontrollingshadows(boolean bool){getEntityData().set(SHOULDLOOPCONTROLLINGSHADOWS, bool);}
-    public int getTimerForSummoningShoadows(){return getEntityData().get(TIMER_FOR_SUMMONING_SHADOWS);}
+    public int getTimerForSummoningShadows(){return getEntityData().get(TIMER_FOR_SUMMONING_SHADOWS);}
     public void setTimerForSummoningShadows(int rot){getEntityData().set(TIMER_FOR_SUMMONING_SHADOWS, rot);}
     public boolean getIsSummoningShadows(){
         return getEntityData().get(ISSUMMONINGSHADOWS);
@@ -529,6 +594,7 @@ public void disappearInShadows(){
     }
     public boolean getShooting() {
         return getEntityData().get(ISSHOOTING);
+
     }
 
     public void setShooting(boolean shooting) {
@@ -560,41 +626,45 @@ public void disappearInShadows(){
         getEntityData().set(ZCoord, coord);
     }
     public void lookAtVictim(EntityAnchorArgument.Anchor pAnchor, Vec3 pTarget, IBone body, IBone head) {
-        Vec3 vec3 = pAnchor.apply(this);
-        double dx = pTarget.x - vec3.x;
-        double dz = pTarget.z - vec3.z;
-        double xz = Math.sqrt(dx * dx + dz * dz);
-        double dy = pTarget.y-0.22D - (vec3.y+3);
 
+        if(!getIsSummoningShadows()) {
+            Vec3 vec3 = pAnchor.apply(this);
+            double dx = pTarget.x - vec3.x;
+            double dz = pTarget.z - vec3.z;
+            double xz = Math.sqrt(dx * dx + dz * dz);
+            double dy = pTarget.y - 0.22D - (vec3.y + 3);
+            head.setRotationX(Mth.wrapDegrees((float) (Math.atan2(dy, xz))));
+            double angle = (-Math.toDegrees(((float) (Math.atan2(dx, dz)))));
+            this.lerpYRot = (float) angle;
+            this.setYBodyRot((float) angle);
 
-        body.setRotationY(Mth.wrapDegrees((float)(Math.atan2(dx,dz))));
-        head.setRotationX(Mth.wrapDegrees((float)(Math.atan2(dy,xz))));
-////    bone.setRotationY(Mth.wrapDegrees((float)(Mth.atan2(d2, d0) * (double)(180F / (float)Math.PI)) - 90.0F));
-        //this.setYHeadRot(Mth.wrapDegrees(-(float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI))));
-        //  this.setYHeadRot((float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI)));
-        // this.yRotO = this.getYRot();
-
+        }
     }
+
     public void aimBowAtVictim(EntityAnchorArgument.Anchor pAnchor, Vec3 pTarget, IBone leftArm, IBone rightArm, IBone palm){
         Vec3 vec3 = pAnchor.apply(this);
         double dx = pTarget.x - vec3.x;
         double dz = pTarget.z - vec3.z;
         double xz = Math.sqrt(dx * dx + dz * dz);
         double dy = pTarget.y - (vec3.y+3.1D);
-
-        rightArm.setRotationX(rightArm.getRotationX() + (Mth.wrapDegrees((float)(Math.atan2(dy,xz))))*1.3f);
-        //this
+        if(getShouldRotateHandsForShooting()) {
+            rightArm.setRotationX(rightArm.getRotationX() + (Mth.wrapDegrees((float) (Math.atan2(dy, xz)))) * 1.3f);
+            //this
 //        rightArm.setRotationY(rightArm.getRotationY() + (Mth.wrapDegrees((float)(Math.atan2(dy,xz)))*0.57F/(-5.25F)*5f));
 //        rightArm.setRotationZ(rightArm.getRotationZ() + (Mth.wrapDegrees((float)(Math.atan2(dy,xz)))*1.72F/(-5.25F)*0.8f));
 
 
-        palm.setRotationX(palm.getRotationX() - Mth.wrapDegrees((float)(Math.atan2(dy,xz)))/2.5f);
-        palm.setRotationY((palm.getRotationY() - (Mth.wrapDegrees((float)(Math.atan2(dy,xz)))/2.5f)*1.48f/4.73f));
-        palm.setRotationZ((palm.getRotationZ() - (Mth.wrapDegrees((float)(Math.atan2(dy,xz)))/2.5f)*0.7f/4.73f*(-1)));
+            palm.setRotationX(palm.getRotationX() - Mth.wrapDegrees((float) (Math.atan2(dy, xz))) / 2.5f);
+            palm.setRotationY((palm.getRotationY() - (Mth.wrapDegrees((float) (Math.atan2(dy, xz))) / 2.5f) * 1.48f / 4.73f));
+            palm.setRotationZ((palm.getRotationZ() - (Mth.wrapDegrees((float) (Math.atan2(dy, xz))) / 2.5f) * 0.7f / 4.73f * (-1)));
 
-        leftArm.setRotationX(leftArm.getRotationX() + Mth.wrapDegrees((float)(Math.atan2(dy,xz)))/3f);
-        leftArm.setRotationY((leftArm.getRotationY() + (Mth.wrapDegrees((float)(Math.atan2(dy,xz)))/4.2f)*7.16f/2.31f));
-        leftArm.setRotationZ((leftArm.getRotationZ() + (Mth.wrapDegrees((float)(Math.atan2(dy,xz)))/4f)*0.36f/2.31f*(-1)));
+            leftArm.setRotationX(leftArm.getRotationX() + Mth.wrapDegrees((float) (Math.atan2(dy, xz))) / 3f);
+            leftArm.setRotationY((leftArm.getRotationY() + (Mth.wrapDegrees((float) (Math.atan2(dy, xz))) / 4.2f) * 7.16f / 2.31f));
+            leftArm.setRotationZ((leftArm.getRotationZ() + (Mth.wrapDegrees((float) (Math.atan2(dy, xz))) / 4f) * 0.36f / 2.31f * (-1)));
+        }
+        if(getShouldLoopContollingShadows()){
+            leftArm.setRotationX(leftArm.getRotationX() + (Mth.wrapDegrees((float)(Math.atan2(dy,xz))))*1.3f);
+        }
 
     }
 }

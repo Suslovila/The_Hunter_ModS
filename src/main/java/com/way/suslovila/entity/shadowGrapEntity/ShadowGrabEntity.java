@@ -4,6 +4,7 @@ import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.particles.ModParticles;
+import com.way.suslovila.particles.TailBlackParticles;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -23,19 +24,29 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.network.NetworkHooks;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.IAnimationTickable;
+import software.bernie.geckolib3.core.PlayState;
+import software.bernie.geckolib3.core.builder.AnimationBuilder;
+import software.bernie.geckolib3.core.controller.AnimationController;
+import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import static com.way.suslovila.entity.hunter.HunterEntity.maxLight;
+import static com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow.random;
 
 
 public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTickable {
+    //todo: сделать так, чтобы игрок не тепался, чтобы анимация не зависала при esc, заставить игрока не разворачиваться, боится огня
     @Nullable
     private UUID ownerUUID;
     private int tickTimer = 0;
     private static final EntityDataAccessor<Integer> ISREADYTOCATCH = SynchedEntityData.defineId(ShadowGrabEntity.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<String> OWNER = SynchedEntityData.defineId(ShadowGrabEntity.class, EntityDataSerializers.STRING);
 
     private AnimationFactory factory = new AnimationFactory(this);
 
@@ -47,9 +58,9 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
     public static AttributeSupplier setAttributes() {
 
         return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0D)
-                .add(Attributes.ATTACK_DAMAGE, 16.0f)
-                .add(Attributes.ATTACK_SPEED, 2.0f)
+                .add(Attributes.MAX_HEALTH, 10.0D)
+                .add(Attributes.ATTACK_DAMAGE, 0f)
+                .add(Attributes.ATTACK_SPEED, 0f)
                 .add(Attributes.MOVEMENT_SPEED, 0.3f)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 10D)
                 .build();
@@ -58,7 +69,35 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
     protected void defineSynchedData() {
         super.defineSynchedData();
         getEntityData().define(ISREADYTOCATCH, 0);
+        getEntityData().define(OWNER, "");
 
+    }
+
+    private <E extends IAnimatable> PlayState predicateForShadowGrab(AnimationEvent<E> event) {
+        event.getController().setAnimationSpeed(0.7);
+
+        if(getEntityData().get(ISREADYTOCATCH) > 30) {
+            if(getIsReadyToCatch() < 57) {
+                event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.shadowgarden.catch", true));
+                return PlayState.CONTINUE;
+            }
+            else{
+                event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.shadowgarden.caught", true));
+                return PlayState.CONTINUE;
+            }
+        }else{
+            event.getController().setAnimation(new AnimationBuilder().addAnimation("shadowgarden.animation.waiting", true));
+            return PlayState.CONTINUE;
+        }
+
+       // event.getController().markNeedsReload();
+
+    }
+    @Override
+    public void registerControllers(AnimationData data) {
+        AnimationController controller3 = new AnimationController(this, "controllerforshadowgrab1",
+                0, this::predicateForShadowGrab);
+        data.addAnimationController(controller3);
     }
 
     @Override
@@ -74,15 +113,6 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
             pCompound.putUUID("Owner", this.ownerUUID);
         }
     }
-
-
-
-    @Override
-    public void registerControllers(AnimationData data) {
-
-    }
-
-
     @Override
     public AnimationFactory getFactory() {
         return this.factory;
@@ -113,35 +143,43 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
     public boolean isOnFire() {
         return false;
     }
+    public int getIsReadyToCatch(){
+        return getEntityData().get(ISREADYTOCATCH);
+    }
 
     @Override
-public void tick(){
-        super.tick();
+public void baseTick(){
+        super.baseTick();
         if(!level.isClientSide()) {
-            tickTimer++;
-            int chance = random.nextInt(5);
-            if(chance == 2){
-                double deltaX = random.nextDouble(0.0D, 0.5D);
-                double deltaZ = random.nextDouble(0.0D,0.5D);
-                if(random.nextBoolean())deltaX = -deltaX;
-                if(random.nextBoolean())deltaZ = -deltaZ;
+if(getIsReadyToCatch() > 31 && !hasCaughtPlayer())kill();
+
+if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSource.DRY_OUT, 1);
+
+            String owner = getEntityData().get(OWNER);
+
+            if(owner.equals(""))this.discard();
+            else{
+                if((((ServerLevel) level).getEntity(UUID.fromString(owner)))== null)kill();
+                else {
+                    if (!(((ServerLevel) level).getEntity(UUID.fromString(owner))).isAlive() || ((HunterEntity) (((ServerLevel) level).getEntity(UUID.fromString(owner)))).getVulnarble())
+                        kill();
+
+                    else {
+                        getLookControl().setLookAt(((ServerLevel) level).getEntity(UUID.fromString(owner)));
+                    }
+                }
+
+            }
 
 
-                this.level.addParticle(ModParticles.HEAD_BLACK_PARTICLES.get(),
-                        this.getX()+deltaX, this.getY(), this.getZ()+deltaZ,
-                        0.01D, 0.01D, 0.01D);
-            }
-            if(tickTimer == 10) {
-                this.level.addParticle(ModParticles.TEST_BLACK_PARTICLES.get(),
-                        this.getX() + 1, this.getY() + 1, this.getZ() + 1,
-                        0.1, 0.1, 0.1);
-                tickTimer = 0;
-            }
+
             this.getEntityData().set(ISREADYTOCATCH, getEntityData().get(ISREADYTOCATCH) + 1);
             if (hasCaughtPlayer()) {
-                if (this.getPassengers().get(0).isShiftKeyDown()) {
-                    this.getPassengers().get(0).setShiftKeyDown(false);
-                }
+                Entity entity = this.getPassengers().get(0);
+                if (entity.isShiftKeyDown()) entity.setShiftKeyDown(false);
+                entity.setYBodyRot(yBodyRot);
+                entity.setYHeadRot(getYHeadRot());
+
                 if(this.navigation.isDone()){
                     List<Entity> entities = level.getEntities(this, new AABB(this.getX() + 4, this.getY() + 4, this.getZ() + 4,this.getX() - 4, this.getY() - 4, this.getZ() - 4));
                     boolean isHunterNear = false;
@@ -205,6 +243,16 @@ public void tick(){
                 }
             }
         }
+        else{
+            if(this.isDeadOrDying()){
+                for(int i = 0; i < 1000; i++){
+                    this.level.addParticle(new TailBlackParticles.TailParticleData(random.nextDouble(0.03D, 0.1D), random.nextInt(10, 70)),
+                            getX() + random.nextDouble(-1.5, 1.5), getY()+random.nextDouble(-1.5, 1.5) + 1.5, getZ() + random.nextDouble(-1.5, 1.5),
+                            random.nextDouble(-0.3d, 0.3d), random.nextDouble(-0.3d, 0.3d), random.nextDouble(-0.3d, 0.3d));
+                }
+                  this.discard();
+            }
+        }
 }
 
     @Override
@@ -212,13 +260,8 @@ public void tick(){
         super.playerTouch(player);
         if (!level.isClientSide()) {
             float distance = this.distanceTo(player);
-            if (distance < 0.6F && getEntityData().get(ISREADYTOCATCH) > 20 && !hasCaughtPlayer() && !(player.getVehicle() instanceof TrapEntity)) {
-                player.startRiding(this, true);
-                if (this.level instanceof ServerLevel) {
-                    if (((ServerLevel) level).getEntity(this.ownerUUID) != null) {
-                        this.navigation.moveTo(((ServerLevel) level).getEntity(this.ownerUUID), 0.1);
-                    }
-                }
+            if (getEntityData().get(ISREADYTOCATCH) > 31 && !hasCaughtPlayer() && !isDeadOrDying()) {
+                player.startRiding(this, false);
             }
         }
     }
@@ -228,12 +271,22 @@ public void tick(){
     public boolean canRiderInteract() {
         return false;
     }
-
+    @Override
+    protected void doPush(Entity pEntity) {
+    }
     @Override
     public boolean shouldRiderSit() {
         return false;
     }
     public boolean hasCaughtPlayer() {
         return this.hasExactlyOnePlayerPassenger();
+    }
+    @Override
+    public double getMyRidingOffset() {
+        return 3D;
+    }
+    @Override
+    public double getPassengersRidingOffset() {
+        return 0.43D;
     }
 }

@@ -108,7 +108,7 @@ public class ModEvents {
 
                         if (vec.length() <= 5 && !(arrow.level.getBlockState(checkPos).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) && !arrow.level.getBlockState(checkPos).isAir()) {
                             if (!arrow.level.isClientSide()) {
-                                arrow.level.removeBlock(checkPos, true);
+                                arrow.level.setBlockAndUpdate(checkPos, Blocks.AIR.defaultBlockState());
                             } else {
 //                               if(random.nextInt(8) == 7){
 //                                   arrow.level.addParticle(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
@@ -186,7 +186,7 @@ public class ModEvents {
     @SubscribeEvent
     public static void IfHunterSpawnsEvent(EntityJoinWorldEvent event) {
         if (event.getEntity() instanceof Player){
-        boolean client = event.getEntity().level.isClientSide();
+            boolean client = event.getEntity().level.isClientSide();
         boolean isLiving = event.getEntity() instanceof LivingEntity;
         boolean hasEffect = false;
         if(isLiving){
@@ -196,8 +196,8 @@ public class ModEvents {
             Messages.sendWaterShield(new MessageWaterShield(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), event.getEntity().getId()), (LivingEntity) event.getEntity());
             boolean j = true;
         }
-        if (event.getEntity() instanceof LivingEntity)
-            System.out.println(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()));
+//        if (event.getEntity() instanceof LivingEntity)
+//            System.out.println(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()));
     }
         if (event.getEntity() instanceof HunterEntity && !event.getEntity().level.isClientSide()) {
             HunterAmountData data = HunterAmountData.get(event.getEntity().level);
@@ -220,6 +220,9 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void IfHunterBagSpawnsEvent(EntityJoinWorldEvent event) {
+        if(!event.getEntity().level.isClientSide() && event.getEntity() instanceof LivingEntity)
+            Messages.sendWaterShield(new MessageWaterShield(((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), ((LivingEntity)event.getEntity()).getId()), ((LivingEntity)event.getEntity()));
+
         if (!event.getEntity().level.isClientSide()) {
             if (event.getEntity() instanceof HunterBagEntity) {
                 event.getEntity().setNoGravity(false);
@@ -296,6 +299,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void ForbidTravelToDimension(EntityTravelToDimensionEvent event) {
+
         boolean t = false;
         if (event.getEntity() instanceof LivingEntity) {
             if (((LivingEntity) event.getEntity()).hasEffect(ModEffects.ENDER_SEAL.get())) {
