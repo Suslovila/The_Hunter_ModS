@@ -66,7 +66,7 @@ public class ModEntityTypes {
     public static final RegistryObject<EntityType<ShadowGrabEntity>> SHADOW_GRAB =
             ENTITY_TYPES.register("shadow_grab",
                     () -> EntityType.Builder.of(ShadowGrabEntity::new, MobCategory.MISC)
-                            .sized(2f, 2f)
+                            .sized(3f, 2f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "shadow_grab").toString()));
 
     public static final RegistryObject<EntityType<ShadowGardenEntity>> SHADOW_GARDEN =

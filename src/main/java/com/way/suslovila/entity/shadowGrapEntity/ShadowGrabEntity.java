@@ -5,6 +5,7 @@ import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.particles.TailBlackParticles;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -40,8 +41,8 @@ import static com.way.suslovila.entity.hunter.HunterEntity.maxLight;
 import static com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow.random;
 
 
-public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTickable {
-    //todo: сделать так, чтобы игрок не тепался, чтобы анимация не зависала при esc, заставить игрока не разворачиваться, боится огня
+public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAnimationTickable {
+    //todo: сделать так, заставить игрока не разворачиваться
     @Nullable
     private UUID ownerUUID;
     private int tickTimer = 0;
@@ -50,8 +51,8 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
 
     private AnimationFactory factory = new AnimationFactory(this);
 
-    public ShadowGrabEntity(EntityType<? extends Mob> p_21368_, Level p_21369_) {
-        super(p_21368_, p_21369_);
+    public ShadowGrabEntity(EntityType<? extends PathfinderMob> p_21683_, Level p_21684_) {
+        super(p_21683_, p_21684_);
     }
 
 
@@ -75,10 +76,14 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
 
     private <E extends IAnimatable> PlayState predicateForShadowGrab(AnimationEvent<E> event) {
         event.getController().setAnimationSpeed(0.7);
-
-        if(getEntityData().get(ISREADYTOCATCH) > 30) {
+//        if(Minecraft.getInstance().isPaused()) {
+//            event.getController().markNeedsReload();
+//            return PlayState.STOP;
+//
+//        }
+            if(getEntityData().get(ISREADYTOCATCH) > 30) {
             if(getIsReadyToCatch() < 57) {
-                event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.shadowgarden.catch", true));
+                event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.shadowgarden.catch2", false));
                 return PlayState.CONTINUE;
             }
             else{
@@ -120,9 +125,7 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
 
 
     @Override
-    public int tickTimer() {
-        return tickCount;
-    }
+    public int tickTimer() {return tickCount;}
     @Override
     public boolean isPushable() {
         return false;
@@ -151,17 +154,19 @@ public class ShadowGrabEntity extends Mob implements IAnimatable, IAnimationTick
 public void baseTick(){
         super.baseTick();
         if(!level.isClientSide()) {
+            System.out.println("IS ready to catch: " + getIsReadyToCatch());
+
 if(getIsReadyToCatch() > 31 && !hasCaughtPlayer())kill();
 
 if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSource.DRY_OUT, 1);
 
             String owner = getEntityData().get(OWNER);
 
-            if(owner.equals(""))this.discard();
+            if(owner.equals(""))this.kill();
             else{
                 if((((ServerLevel) level).getEntity(UUID.fromString(owner)))== null)kill();
                 else {
-                    if (!(((ServerLevel) level).getEntity(UUID.fromString(owner))).isAlive() || ((HunterEntity) (((ServerLevel) level).getEntity(UUID.fromString(owner)))).getVulnarble())
+                    if (!(((ServerLevel) level).getEntity(UUID.fromString(owner))).isAlive() || ((HunterEntity) (((ServerLevel) level).getEntity(UUID.fromString(owner)))).isVulnarable())
                         kill();
 
                     else {
@@ -177,80 +182,67 @@ if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSour
             if (hasCaughtPlayer()) {
                 Entity entity = this.getPassengers().get(0);
                 if (entity.isShiftKeyDown()) entity.setShiftKeyDown(false);
-                entity.setYBodyRot(yBodyRot);
-                entity.setYHeadRot(getYHeadRot());
-
-                if(this.navigation.isDone()){
-                    List<Entity> entities = level.getEntities(this, new AABB(this.getX() + 4, this.getY() + 4, this.getZ() + 4,this.getX() - 4, this.getY() - 4, this.getZ() - 4));
-                    boolean isHunterNear = false;
-                    for(int i = 0; i < entities.size(); i++){
-                        if (entities.get(i) instanceof HunterEntity){
-                            isHunterNear = true;
-                        }
-                    }
-                    if(!isHunterNear){
-                        if (tickTimer % 10 == 0) {
-                            Player player = (Player)this.getPassengers().get(0);
-                            int count1 = 0;
-                            for (int i = 0; i < 4; i++) {
-                                ItemStack armorItem = ((Player) this.getPassengers().get(0)).getInventory().armor.get(i);
-                                if(armorItem.isEmpty()){
+               entity.setYBodyRot(yBodyRot);
+               entity.setYHeadRot(getYHeadRot());
+                    if (tickTimer % 10 == 0) {
+                        Player player = (Player) this.getPassengers().get(0);
+                        int count1 = 0;
+                        for (int i = 0; i < 4; i++) {
+                            ItemStack armorItem = ((Player) this.getPassengers().get(0)).getInventory().armor.get(i);
+                            if (armorItem.isEmpty()) {
+                                count1 += 1;
+                            } else {
+                                if (((ArmorItem) armorItem.getItem()).getDefense() == 0) {
                                     count1 += 1;
                                 }
-                                else{
-                                    if(((ArmorItem)armorItem.getItem()).getDefense() == 0){
-                                        count1 += 1;
-                                    }
-                                }
-                                if (armorItem.isDamageableItem()) {
-                                    if (armorItem.getDamageValue() + 10 > armorItem.getMaxDamage()) {
-                                        if (i == 0) {
-                                            armorItem.hurtAndBreak(10, player, (p_35997_) -> {
-                                                p_35997_.broadcastBreakEvent(EquipmentSlot.FEET);
-                                            });
-                                        }
-                                        if(i == 1){
-                                            armorItem.hurtAndBreak(10, player, (p_35997_) -> {
-                                                p_35997_.broadcastBreakEvent(EquipmentSlot.LEGS);
-                                            });
-                                        }
-                                        if(i == 2){
-                                            armorItem.hurtAndBreak(10, player, (p_35997_) -> {
-                                                p_35997_.broadcastBreakEvent(EquipmentSlot.CHEST);
-                                            });
-                                        }
-                                        if(i == 3){
-                                            armorItem.hurtAndBreak(10, player, (p_35997_) -> {
-                                                p_35997_.broadcastBreakEvent(EquipmentSlot.HEAD);
-                                            });
-                                        }
-
-
-                                    } else {
-                                        armorItem.hurt(10, random, (ServerPlayer) player);
-                                    }
-                                }
-
                             }
-                            if(count1 == 4){
-                                DamageSource damageSourceP = new DamageSource(MysticalCreatures.MOD_ID + "pressure");
-                                damageSourceP.bypassArmor();
-                                player.hurt(damageSourceP, 1);
+                            if (armorItem.isDamageableItem()) {
+                                if (armorItem.getDamageValue() + 10 > armorItem.getMaxDamage()) {
+                                    if (i == 0) {
+                                        armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                            p_35997_.broadcastBreakEvent(EquipmentSlot.FEET);
+                                        });
+                                    }
+                                    if (i == 1) {
+                                        armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                            p_35997_.broadcastBreakEvent(EquipmentSlot.LEGS);
+                                        });
+                                    }
+                                    if (i == 2) {
+                                        armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                            p_35997_.broadcastBreakEvent(EquipmentSlot.CHEST);
+                                        });
+                                    }
+                                    if (i == 3) {
+                                        armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                            p_35997_.broadcastBreakEvent(EquipmentSlot.HEAD);
+                                        });
+                                    }
+
+
+                                } else {
+                                    armorItem.hurt(10, random, (ServerPlayer) player);
+                                }
                             }
-                            tickTimer = 0;
+
                         }
+                        if (count1 == 4) {
+                            DamageSource damageSourceP = new DamageSource(MysticalCreatures.MOD_ID + "pressure");
+                            damageSourceP.bypassArmor();
+                            player.hurt(damageSourceP, 1);
+                        }
+                        tickTimer = 0;
                     }
-                }
             }
         }
         else{
             if(this.isDeadOrDying()){
-                for(int i = 0; i < 1000; i++){
+                for(int i = 0; i < 70; i++){
                     this.level.addParticle(new TailBlackParticles.TailParticleData(random.nextDouble(0.03D, 0.1D), random.nextInt(10, 70)),
                             getX() + random.nextDouble(-1.5, 1.5), getY()+random.nextDouble(-1.5, 1.5) + 1.5, getZ() + random.nextDouble(-1.5, 1.5),
-                            random.nextDouble(-0.3d, 0.3d), random.nextDouble(-0.3d, 0.3d), random.nextDouble(-0.3d, 0.3d));
+                            random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d));
                 }
-                  this.discard();
+                  //this.discard();
             }
         }
 }
@@ -259,8 +251,9 @@ if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSour
     public void playerTouch(Player player) {
         super.playerTouch(player);
         if (!level.isClientSide()) {
-            float distance = this.distanceTo(player);
-            if (getEntityData().get(ISREADYTOCATCH) > 31 && !hasCaughtPlayer() && !isDeadOrDying()) {
+//            float distance = this.distanceTo(player);
+            if (getEntityData().get(ISREADYTOCATCH) > 31 && !hasCaughtPlayer()) {
+                player.setShiftKeyDown(false);
                 player.startRiding(this, false);
             }
         }
@@ -289,4 +282,14 @@ if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSour
     public double getPassengersRidingOffset() {
         return 0.43D;
     }
+    public boolean shouldRiderFaceForward(Player player) {
+        return true;
+    }
+    @Override
+    public boolean showVehicleHealth() {return true;}
+    public void die(DamageSource damageSource){
+        super.die(damageSource);
+        //if(!level.isClientSide()) this.discard();
+    }
+
 }

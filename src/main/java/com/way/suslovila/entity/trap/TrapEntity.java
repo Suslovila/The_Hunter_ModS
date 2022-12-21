@@ -3,8 +3,10 @@ package com.way.suslovila.entity.trap;
 import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
 import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.MysticalCreatures;
+import com.way.suslovila.particles.TailBlackParticles;
 import com.way.suslovila.savedData.HuntTime;
 import com.way.suslovila.savedData.SaveVictim;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -15,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
@@ -38,7 +41,7 @@ public class TrapEntity  extends PathfinderMob implements IAnimatable {
 
     public static AttributeSupplier setAttributes() {
         return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 100.0D)
+                .add(Attributes.MAX_HEALTH, 10.0D)
                 .add(Attributes.ATTACK_DAMAGE, 0.0f)
                 .add(Attributes.ATTACK_SPEED, 2.0f)
                 .add(Attributes.MOVEMENT_SPEED, 0.0f)
@@ -114,7 +117,10 @@ public class TrapEntity  extends PathfinderMob implements IAnimatable {
 public void baseTick() {
     super.baseTick();
 if(this.level.isClientSide()){
-//    System.out.println(timer);
+    Vec3 vec3 = this.getLookAngle();
+    level.addParticle(new TailBlackParticles.TailParticleData(0.3, 60),
+            this.xo+Math.sin(Math.PI*tickCount/20)+vec3.x*3, this.yo+Math.cos(Math.PI*tickCount/20) + vec3.y*3, this.zo +Math.cos(Math.PI*tickCount/20)+vec3.z*3,
+            0, 0, 0);
 }
 //        this.level.addParticle(ModParticles.HEAD_BLACK_PARTICLES.get(),
 //                this.getX() + 1, this.getY() + 1, this.getZ() + 1,

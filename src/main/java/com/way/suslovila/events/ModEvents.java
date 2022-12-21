@@ -14,6 +14,7 @@ import com.way.suslovila.entity.ModEntityTypes;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
+import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.item.RainyAuraTalisman.RainyAuraTalismanItem;
 import com.way.suslovila.item.RainyAuraTalisman.WaterShieldLayer;
@@ -24,6 +25,8 @@ import com.way.suslovila.savedData.clientSynch.Messages;
 import com.way.suslovila.simplybackpacks.inventory.BackpackData;
 import com.way.suslovila.simplybackpacks.items.BackpackItem;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
@@ -48,6 +51,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -92,7 +96,16 @@ public class ModEvents {
             System.out.println(event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).map(EntityCapabilityStorage::getHasWaterShield).get());
         }
     }
-
+@SubscribeEvent
+public static void mouse(InputEvent event){
+//        LocalPlayer player = Minecraft.getInstance().player;
+//    if(player != null && Minecraft.getInstance().player.isPassenger()){
+//            if(player.getVehicle() instanceof ShadowGrabEntity){
+//                event.setCanceled(true);
+//
+//            }
+//    }
+}
     @SubscribeEvent
     public static void stuffForExplosionArrow(EntityLeaveWorldEvent event) {
 
@@ -209,6 +222,7 @@ public class ModEvents {
             if ((HuntersHP.get(event.getEntity().level).getHunterHP() != 0)) {
                 ((HunterEntity) event.getEntity()).setHealth((float) HuntersHP.get(event.getEntity().level).getHunterHP());
             }
+            //HunterEntity.possibleActions.put("vulnarable", (hunter)-> {((HunterEntity)hunter).setVulnarable(false);});
         }
     }
     @SubscribeEvent

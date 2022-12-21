@@ -12,7 +12,7 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 public class RenderShadowGrab extends GeoEntityRenderer<ShadowGrabEntity> {
     public RenderShadowGrab(EntityRendererProvider.Context renderManager) {
         super(renderManager, new ShadowGrabModel());
-        this.shadowRadius = 1f;
+        this.shadowRadius = 2.5f;
         this.shadowStrength = 10.0f;
 
     }
