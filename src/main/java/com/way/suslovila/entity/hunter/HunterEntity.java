@@ -49,7 +49,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
         public static float maxLight = 0.26f;
         public static int ticker = 0;
         //variables for storing time of any Hunter's action
-   private HashMap<Vec3, ArrayList<Vec3>> cordsForShadowsAroundHand = new HashMap<>();
+   private HashMap<Vec3, ArrayList<Object>> cordsForShadowsAroundHand = new HashMap<>();
     private static final EntityDataAccessor<String> UUIDOFGRABENTITY = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Boolean> SHOULDROTATEHANDSFORSHOOTING = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> TIMER_FOR_SUMMONING_SHADOWS = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
@@ -220,36 +220,39 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                 if(Objects.equals(getActualTask(), "controlShadows")) {
                                     double armLength = 0.3D + 1.5;
                                     if (cordsForShadowsAroundHand.size() < 6) {
-                                        Vec3 radius = new Vec3(random.nextDouble(0.15, 0.6), 1, 0);
+                                        double radius = random.nextDouble(0.15, 0.5);
+                                        int timer = 0;
                                         Vec3 lookVectorNormal = this.getViewVector(0);
-                                        Vec3 lookVector = lookVectorNormal.scale(armLength * random.nextDouble(0.5, 1));
-                                        Vec3 m = new Vec3(lookVectorNormal.y, -lookVectorNormal.x, 0);
+                                        Vec3 lookVector = lookVectorNormal.scale(armLength * random.nextDouble(0.35, 0.85));
+                                        Vec3 m = new Vec3(lookVectorNormal.z, 0, -lookVectorNormal.x);
                                         m = m.normalize();
                                         Vec3 k = lookVectorNormal.cross(m);
                                         k = k.normalize();
-                                        ArrayList<Vec3> arrayList = new ArrayList<Vec3>();
+                                        ArrayList<Object> arrayList = new ArrayList<Object>();
                                         arrayList.add(radius);
                                         arrayList.add(m);
                                         arrayList.add(k);
-                                        cordsForShadowsAroundHand.put(new Vec3(this.position().x + lookVector.x, this.position().y + 3.4 + lookVector.y, this.position().z + lookVector.z), arrayList);
+                                        arrayList.add(timer);
+                                        cordsForShadowsAroundHand.put(new Vec3(this.position().x + lookVector.x + m.x*0.40, this.position().y + 2.7 + lookVector.y, this.position().z + lookVector.z+m.z*0.40), arrayList);
                                     }
                                     HashMap map = (HashMap) cordsForShadowsAroundHand.clone();
                                     Iterator<Vec3> iterator = map.keySet().iterator();
                                     while (iterator.hasNext()) {
                                         Vec3 dotInSpace = iterator.next();
-                                        ArrayList<Vec3> list = cordsForShadowsAroundHand.get(dotInSpace);
-                                        Vec3 info = list.get(0);
-                                        double radius = info.x;
-                                        Vec3 m = list.get(1).scale(radius);
-                                        Vec3 k = list.get(2).scale(radius);
-                                        for (int h = 0; h < 2; h++) {
-                                            Vec3 a = m.scale(Math.cos(info.y * Math.PI / 50)).add(k.scale(Math.sin(info.y * Math.PI / 50)));
-                                            info.add(0,1,0);
+                                        ArrayList<Object> list = cordsForShadowsAroundHand.get(dotInSpace);
+                                        double radius = (double)list.get(0);
+                                        Vec3 m = ((Vec3)list.get(1)).scale(radius);
+                                        Vec3 k = ((Vec3)list.get(2)).scale(radius);
+                                        for (int h = 0; h < 7; h++) {
+                                            int timer = (int)list.get(3);
+                                            Vec3 a = m.scale(Math.cos(timer * Math.PI / 100)).add(k.scale(Math.sin(timer * Math.PI / 100)));
+                                            list.remove(3);
+                                            list.add(timer+1);
                                             Vec3 endPosition = dotInSpace.add(a);
-                                            ((ServerLevel) this.level).sendParticles(new TailBlackParticles.TailParticleData(random.nextDouble(0.03D, 0.1D), random.nextInt(69, 70)),
+                                            ((ServerLevel) this.level).sendParticles(new TailBlackParticles.TailParticleData(random.nextDouble(0.03D, 0.05D), random.nextInt(19, 20)),
                                                     endPosition.x, endPosition.y, endPosition.z, 1, 0,
                                                     0, 0, 0);
-                                            if (random.nextInt(200) == 38) {
+                                            if (random.nextInt(60) == 37) {
                                                 cordsForShadowsAroundHand.remove(dotInSpace);
                                             }
                                         }
@@ -453,51 +456,6 @@ getEntityData().define(ACTUAL_TASK, "noAction");
             this.setYBodyRot((float) angle);
 
         }
-//        if(Objects.equals(getActualTask(), "controlShadows")) {
-//            //if(coordsForShadowsAroundHand.size() < 6) coordsForShadowsAroundHand.add(new Vec3());
-//            Vec3 vec3 = pAnchor.apply(this);
-//            double dx = pTarget.x - vec3.x;
-//            double dz = pTarget.z - vec3.z;
-//            double xz = Math.sqrt(dx * dx + dz * dz);
-//            double dy = pTarget.y - (vec3.y + 3.1D);
-//            double cosV = Math.cos((float) (Math.atan2(dy, xz)) * 1.3f);
-//            double armLength = 0.3D + 1.5;
-//            // double bodyRotAngle = (float) (Math.atan2(dx, dz) + 0.05f);
-////            double arrowXPos = vec3.x + xzArmLength * Math.sin(bodyRotAngle);
-////            double arrowZpos = vec3.z + xzArmLength * Math.cos(bodyRotAngle);
-////            double arrowYpos = vec3.y + 3.4 + 1.5 * Math.sin((float) (Math.atan2(dy, xz)) * 1.3f);
-//            if (cordsForShadowsAroundHand.size() < 6) {
-//                Vec3 radius = new Vec3(random.nextDouble(1), 0, 0);
-//                Vec3 lookVector = this.getLookAngle().scale(armLength * random.nextDouble(1));
-//                Vec3 m = new Vec3(-lookVector.y, lookVector.x, 0);
-//                Vec3 k = lookVector.cross(m).scale(1 / (lookVector.cross(m).length()));
-//                k = k.normalize();
-//                m = m.normalize();
-//                ArrayList<Vec3> arrayList = new ArrayList<Vec3>();
-//                arrayList.add(radius);
-//                arrayList.add(m);
-//                arrayList.add(k);
-//                cordsForShadowsAroundHand.put(new Vec3(vec3.x + lookVector.x, vec3.y + 3.4 + lookVector.y, vec3.z + lookVector.z), arrayList);
-//            }
-//            HashMap map = (HashMap)cordsForShadowsAroundHand.clone();
-//            Iterator<Vec3> iterator = map.keySet().iterator();
-//
-//            while (iterator.hasNext()) {
-//                Vec3 dotInSpace = iterator.next();
-//                ArrayList<Vec3> list = cordsForShadowsAroundHand.get(dotInSpace);
-//                double radius = list.get(0).x;
-//                Vec3 m = list.get(1).scale(radius);
-//                Vec3 k = list.get(2).scale(radius);
-//                Vec3 a = m.scale(Math.cos(tickCount*Math.PI/60)).add(k.scale(Math.PI*tickCount/60));
-//                Vec3 endPosition = dotInSpace.add(a);
-//                this.level.addParticle(new TailBlackParticles.TailParticleData(random.nextDouble(0.03D, 0.1D), random.nextInt(69,70)),
-//                        endPosition.x, endPosition.y, endPosition.z,
-//                        0,0,0);
-//                if(random.nextInt(40) == 38){
-//                    cordsForShadowsAroundHand.remove(dotInSpace);
-//                }
-//            }
-//        }
     }
 
     public void aimBowAtVictim(EntityAnchorArgument.Anchor pAnchor, Vec3 pTarget, IBone leftArm, IBone rightArm, IBone palm){
