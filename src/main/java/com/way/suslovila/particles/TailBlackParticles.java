@@ -77,7 +77,7 @@ public class TailBlackParticles extends TextureSheetParticle {
 
 
     public static class TailParticleData implements ParticleOptions {
-        public static final ParticleOptions.Deserializer<TailParticleData> DESERIALIZER = new ParticleOptions.Deserializer<TailParticleData>() {
+        public static final Deserializer<TailParticleData> DESERIALIZER = new Deserializer<TailParticleData>() {
             public TailParticleData fromCommand(ParticleType<TailParticleData> particleTypeIn, StringReader reader) throws CommandSyntaxException {
                 reader.expect(' ');
                 double MaxSizeOfParticle = (float) reader.readDouble();

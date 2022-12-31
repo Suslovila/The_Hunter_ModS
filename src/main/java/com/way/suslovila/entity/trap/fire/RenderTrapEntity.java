@@ -12,15 +12,15 @@ import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 import software.bernie.geckolib3.renderers.geo.layer.LayerGlowingAreasGeo;
 
-public class RenderTrapEntity extends GeoEntityRenderer<com.way.suslovila.entity.trap.TrapEntity> {
+public class RenderTrapEntity extends GeoEntityRenderer<TrapEntity> {
     public RenderTrapEntity(EntityRendererProvider.Context renderManager) {
         super(renderManager, new TrapEntityModel());
         this.shadowRadius = 0.01f;
-        this.addLayer(new LayerGlowingAreasGeo<com.way.suslovila.entity.trap.TrapEntity>(this, modelProvider::getTextureLocation, modelProvider::getModelLocation, RenderType::eyes));
+        this.addLayer(new LayerGlowingAreasGeo<TrapEntity>(this, modelProvider::getTextureLocation, modelProvider::getModelLocation, RenderType::eyes));
     }
 
     @Override
-    public ResourceLocation getTextureLocation(com.way.suslovila.entity.trap.TrapEntity instance) {
+    public ResourceLocation getTextureLocation(TrapEntity instance) {
         return new ResourceLocation(MysticalCreatures.MOD_ID, "textures/entity/trap/trap.png");
     }
 

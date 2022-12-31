@@ -1,7 +1,6 @@
 package com.way.suslovila.event;
 
-import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
-import com.way.suslovila.item.RainyAuraTalisman.WaterShieldLayer;
+import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.particles.*;
 import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.entity.ModEntityTypes;
@@ -12,8 +11,6 @@ import com.way.suslovila.savedData.IsTheVictim.MessagesBoolean;
 import com.way.suslovila.savedData.arrow.MessagesForArrow;
 import com.way.suslovila.savedData.clientSynch.Messages;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.event.RegistryEvent;

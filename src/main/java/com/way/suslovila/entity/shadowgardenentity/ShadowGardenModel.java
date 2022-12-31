@@ -1,7 +1,6 @@
 package com.way.suslovila.entity.shadowgardenentity;
 
 import com.way.suslovila.MysticalCreatures;
-import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.model.AnimatedGeoModel;

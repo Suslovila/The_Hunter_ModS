@@ -9,24 +9,24 @@ import javax.annotation.Nonnull;
 
 
 public class DelayBeforeSpawningHunter extends SavedData {
-    private int tickDelay;
+    private int tickDelay = -1;
     @Nonnull
     public static DelayBeforeSpawningHunter get(Level level) {
         if (level.isClientSide) {
             throw new RuntimeException("Don't access this client-side!");
         }
         DimensionDataStorage storage = level.getServer().overworld().getDataStorage();
-        return storage.computeIfAbsent(DelayBeforeSpawningHunter::new, DelayBeforeSpawningHunter::new, "huntershp");
+        return storage.computeIfAbsent(DelayBeforeSpawningHunter::new, DelayBeforeSpawningHunter::new, "hunterspawndelay");
     }
     public DelayBeforeSpawningHunter() {
     }
 
     public DelayBeforeSpawningHunter(CompoundTag tag) {
-        int delay = tag.getInt("hunterspawndelay");
+        int delay = tag.getInt("hunterspawndela");
         tickDelay = delay;
         setDirty();
     }
-    public double getHunterHP(){
+    public double getHunterDelay(){
         return tickDelay;
 
     }
@@ -34,10 +34,10 @@ public class DelayBeforeSpawningHunter extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag) {
-        tag.putInt("hunterspawndelay", tickDelay);
+        tag.putInt("hunterspawndela", tickDelay);
         return tag;
     }
-    public void changeHP(int delay){
+    public void changeTime(int delay){
         tickDelay += delay;
         setDirty();
     }

@@ -14,7 +14,7 @@ public class RainyAuraTalismanButton extends Button {
     private final boolean isForward;
     private final boolean playTurnSound;
 
-    public RainyAuraTalismanButton(int pX, int pY, boolean pIsForward, Button.OnPress pOnPress, boolean pPlayTurnSound) {
+    public RainyAuraTalismanButton(int pX, int pY, boolean pIsForward, OnPress pOnPress, boolean pPlayTurnSound) {
         super(pX, pY, 23, 13, TextComponent.EMPTY, pOnPress);
         this.isForward = pIsForward;
         this.playTurnSound = pPlayTurnSound;

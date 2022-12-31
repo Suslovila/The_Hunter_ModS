@@ -1,3 +1,4 @@
+
 package com.way.suslovila.events;
 
 import com.way.suslovila.MysticalCreatures;
@@ -12,11 +13,13 @@ import com.way.suslovila.effects.rainyaura.RainyAuraCapProvider;
 import com.way.suslovila.effects.rainyaura.RainyAuraStorage;
 import com.way.suslovila.entity.ModEntityTypes;
 import com.way.suslovila.entity.hunter.HunterEntity;
+import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
+import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
+import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.item.RainyAuraTalisman.RainyAuraTalismanItem;
-import com.way.suslovila.item.RainyAuraTalisman.WaterShieldLayer;
 import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.savedData.*;
 import com.way.suslovila.savedData.clientSynch.MessageWaterShield;
@@ -24,6 +27,8 @@ import com.way.suslovila.savedData.clientSynch.Messages;
 import com.way.suslovila.simplybackpacks.inventory.BackpackData;
 import com.way.suslovila.simplybackpacks.items.BackpackItem;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
@@ -33,7 +38,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySelector;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
@@ -42,12 +46,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -57,7 +63,6 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.*;
 
@@ -92,7 +97,16 @@ public class ModEvents {
             System.out.println(event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).map(EntityCapabilityStorage::getHasWaterShield).get());
         }
     }
+@SubscribeEvent
+public static void mouse(InputEvent.RawMouseEvent event){
+        LocalPlayer player = Minecraft.getInstance().player;
+    if(player != null && Minecraft.getInstance().player.isPassenger()){
+            if(player.getVehicle() instanceof ShadowGrabEntity){
+              //  event.setCanceled(true);
 
+            }
+    }
+}
     @SubscribeEvent
     public static void stuffForExplosionArrow(EntityLeaveWorldEvent event) {
 
@@ -209,6 +223,7 @@ public class ModEvents {
             if ((HuntersHP.get(event.getEntity().level).getHunterHP() != 0)) {
                 ((HunterEntity) event.getEntity()).setHealth((float) HuntersHP.get(event.getEntity().level).getHunterHP());
             }
+            //HunterEntity.possibleActions.put("vulnarable", (hunter)-> {((HunterEntity)hunter).setVulnarable(false);});
         }
     }
     @SubscribeEvent
@@ -437,72 +452,57 @@ public class ModEvents {
                 SaveVictim.get(event.world).changeVictim("novictim");
             }
         }
-        if (!event.world.isClientSide() && event.phase == TickEvent.Phase.START) {
-            if (event.world.dimension() == Level.OVERWORLD) {
-                if (HuntTime.get(event.world).getHuntTime() > 0) {
-//                    System.out.println(HuntTime.get(event.world).getHuntTime());
-                    HuntTime.get(event.world).reduceTime();
-                }
-                if (HuntTime.get(event.world).getHuntTime() <= 0) {
-                    SaveVictim.get(event.world).changeVictim("novictim");
-                }
-            }
-            int chance = event.world.random.nextInt(2400);
-            if (chance == 500) {
+        if (!event.world.isClientSide() && event.phase == TickEvent.Phase.START && event.world.dimension() == Level.OVERWORLD) {
+            if (HuntTime.get(event.world).getHuntTime() <= 0) {
+                SaveVictim.get(event.world).changeVictim("novictim");
+            } else {
+                HuntTime.get(event.world).reduceTime();
+                Level level = event.world;
                 if (!SaveVictim.get(event.world).getVictim().equals("novictim") && SaveVictim.get(event.world).getVictim() != null) {
-                    Player victim = event.world.getPlayerByUUID(UUID.fromString(SaveVictim.get(event.world).getVictim()));
-                    if (victim != null) {
-                        if (event.world.random.nextInt(6) == 3) {
-                            BlockPos checkpos;
-                            int maxDistance = 20;
-                            boolean flag = true;
-                            for (int x = victim.getBlockX() + maxDistance; x < victim.getBlockX() + maxDistance && flag; x++) {
-                                for (int y = victim.getBlockY() - 2; y < victim.getBlockY() + 2 && flag; y++) {
-                                    for (int z = victim.getBlockZ() - maxDistance; z < victim.getBlockZ() + maxDistance && flag; z++) {
-                                        if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 8) {
-                                            checkpos = new BlockPos(x, y, z);
-                                            //trying to find walls
-//                                                        if (!victim.level.getBlockState(checkpos).isAir() && victim.level.getBlockState(checkpos).)
+                    int chance = 0;
+                    if (HunterAmountData.get(level).getPreviousHunter() == null || ((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) == null || (!(((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) == null) && !((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()).isAlive()))
+                        chance = 200;
+                    else
+                        chance = 300;
+                    if (event.world.random.nextInt(chance) == 100) {
+                        Player victim = event.world.getPlayerByUUID(UUID.fromString(SaveVictim.get(event.world).getVictim()));
+                        if (victim != null) {
+                            if (event.world.random.nextInt(6) == 7) {
+//                                BlockPos checkpos;
+//                                int maxDistance = 20;
+//                                boolean flag = true;
+//                                for (int x = victim.getBlockX() + maxDistance; x < victim.getBlockX() + maxDistance && flag; x++) {
+//                                    for (int y = victim.getBlockY() - 2; y < victim.getBlockY() + 2 && flag; y++) {
+//                                        for (int z = victim.getBlockZ() - maxDistance; z < victim.getBlockZ() + maxDistance && flag; z++) {
+//                                            if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 8) {
+//                                                checkpos = new BlockPos(x, y, z);
+//                                                //trying to find walls
+////                                                        if (!victim.level.getBlockState(checkpos).isAir() && victim.level.getBlockState(checkpos).)
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                                PushAttackHunter pushAttackHunter = new PushAttackHunter(ModEntityTypes.HUNTER_PUSH.get(), victim.level);
+                            } else {
+                                //Entity entity = ((ServerLevel) event.world).getEntity(HunterAmountData.get(event.world).getPreviousHunter());
+//                                if (!(HunterAmountData.get(level).getPreviousHunter() == null) && ((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) != null && (!(((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) == null) && ((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()).isAlive()))
+//                                    ((HunterEntity) entity).disappearInShadows();
 
-                                        }
-                                    }
-                                }
+                                DelayBeforeSpawningHunter.get(event.world).changeTime(HunterTeleportFormEntity.lifeTime + HunterAppearanceFormEntity.lifeTime + 5);
 
-
-                            }
-
-
-                            PushAttackHunter pushAttackHunter = new PushAttackHunter(ModEntityTypes.HUNTER_PUSH.get(), victim.level);
-
-                        } else {
-                            BlockPos checkPos;
-                            int maxDistance = 20;
-                            boolean flag = true;
-                            for (int x = victim.getBlockX() + maxDistance; x < victim.getBlockX() + maxDistance; x++) {
-                                for (int y = victim.getBlockY() - maxDistance; y < victim.getBlockY() + maxDistance; y++) {
-                                    for (int z = victim.getBlockZ() - maxDistance; z < victim.getBlockZ() + maxDistance; z++) {
-                                        if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 8) {
-                                            checkPos = new BlockPos(x, y, z);
-                                            BlockPos up1block = new BlockPos(x, y + 1, z);
-                                            BlockPos up2block = new BlockPos(x, y + 2, z);
-                                            BlockPos up3block = new BlockPos(x, y + 1, z);
-                                            if (event.world.getBlockState(up1block).getBlock() == Blocks.AIR && event.world.getBlockState(up2block).getBlock() == Blocks.AIR && event.world.getBrightness(LightLayer.BLOCK, checkPos) <= 14) {
-                                                flag = false;
-
-                                            }
-                                        }
-
-
-                                    }
-                                }
                             }
                         }
+                    }
+                    if (DelayBeforeSpawningHunter.get(event.world).getHunterDelay() == 0) {
+                        ModEvents.summonHunter(event.world);
+                        DelayBeforeSpawningHunter.get(event.world).changeTime(-1);
+                    }
+                    if (DelayBeforeSpawningHunter.get(event.world).getHunterDelay() > 0) {
+                        DelayBeforeSpawningHunter.get(event.world).changeTime(-1);
                     }
                 }
             }
         }
-
-
     }
 
 
@@ -570,6 +570,47 @@ public class ModEvents {
         boolean s = event.getEntityLiving().level.isClientSide();
       if (Objects.requireNonNull(event.getPotionEffect()).getEffect().equals(ModEffects.WATER_SHIELD.get())) Messages.sendWaterShield(new MessageWaterShield(false, event.getEntityLiving().getId()), event.getEntityLiving());
     }
+private static void summonHunter(Level level) {
+    Player victim = level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()));
+    if (victim != null) {
+        int maxDistanceXZ = 36;
+        int maxDistanceY = 10;
+        boolean flag = true;
+        ArrayList<BlockPos> list = new ArrayList<BlockPos>();
+        for (int x = victim.getBlockX() - maxDistanceXZ; (x < victim.getBlockX() + maxDistanceXZ) && flag; x++) {
+            for (int z = victim.getBlockZ() - maxDistanceXZ; (z < victim.getBlockZ() + maxDistanceXZ) && flag; z++) {
+                for (int y = victim.getBlockY() - maxDistanceY; (y < victim.getBlockY() + maxDistanceY) && flag; y++) {
+                    if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 20) {
+                        BlockPos checkPos = new BlockPos(x, y, z);
+                        BlockPos up1block = new BlockPos(x, y + 1, z);
+                        BlockPos up2block = new BlockPos(x, y + 2, z);
+                        BlockPos up3block = new BlockPos(x, y + 3, z);
+                        BlockPos down1block = new BlockPos(x, y - 1, z);
+                        //Vec3 vec3 = new Vec3(victim.getX(), victim.getEyeY(), victim.getZ());
+                        //Vec3 vec31 = new Vec3(checkPos.getX(), checkPos.getY(), checkPos.getZ());
+                        float brightness = level.hasChunkAt(victim.getBlockX(), victim.getBlockZ()) ? level.getBrightness(new BlockPos(victim.getX(), victim.getEyeY(), victim.getZ())) : 0.0F;
+                        boolean bool = level.clip(new ClipContext(new Vec3(victim.getX(), victim.getEyeY(), victim.getZ()), new Vec3(checkPos.getX(), checkPos.getY(), checkPos.getZ()), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, victim)).getType() == HitResult.Type.MISS;
+                        if (level.getBlockState(down1block).getMaterial().blocksMotion() && bool && !level.getBlockState(down1block).isAir() && level.getBlockState(checkPos).isAir() && level.getBlockState(up1block).isAir() && level.getBlockState(up2block).isAir() && level.getBlockState(up3block).isAir() && brightness <= HunterEntity.maxLight) {
+                            //  flag = false;
+                            //!level.getBlockState(checkPos).getCollisionShape(level, checkPos).isEmpty()
+                            list.add(checkPos);
+//                            HunterAppearanceFormEntity appearanceForm = new HunterAppearanceFormEntity(ModEntityTypes.HUNTER_APPEAR_FORM.get(), level);
+//                            appearanceForm.moveTo(checkPos.getX(), checkPos.getY(), checkPos.getZ(), 0, 0);
+//                            level.addFreshEntity(appearanceForm);
+                        }
+                    }
+                }
+            }
+        }
+        HunterAppearanceFormEntity appearanceForm = new HunterAppearanceFormEntity(ModEntityTypes.HUNTER_APPEAR_FORM.get(), level);
+        if (!list.isEmpty()) {
+            BlockPos finalPos = list.get(random.nextInt(list.size()));
+            appearanceForm.moveTo(finalPos.getX()+0.5, finalPos.getY(), finalPos.getZ()+0.5, 0, 0);
+            level.addFreshEntity(appearanceForm);
+        }
+    }
+}
+
 
 }
 

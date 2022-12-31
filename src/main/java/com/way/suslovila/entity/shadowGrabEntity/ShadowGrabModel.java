@@ -1,13 +1,13 @@
-package com.way.suslovila.entity.shadowGrapEntity;
+package com.way.suslovila.entity.shadowGrabEntity;
 
 import com.way.suslovila.MysticalCreatures;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib3.model.AnimatedTickingGeoModel;
 
 import javax.annotation.Nullable;
 
-public class ShadowGrabModel extends AnimatedGeoModel<ShadowGrabEntity> {
+public class ShadowGrabModel extends AnimatedTickingGeoModel<ShadowGrabEntity> {
 
     @Override
     public ResourceLocation getModelLocation(ShadowGrabEntity object) {

@@ -1,6 +1,6 @@
 package com.way.suslovila.event.client;
 
-import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
+import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.entity.shadowgardenentity.ShadowGardenEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import net.minecraft.client.Minecraft;

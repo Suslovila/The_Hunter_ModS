@@ -40,7 +40,7 @@ public class HunterModel extends AnimatedTickingGeoModel<HunterEntity> {
         //System.out.println("We have got the bone");
         //System.out.println(ClientVictimData.getVictim());
         //System.out.println(ClientVictimDataBoolean.getIsVictim());
-        if ((ClientVictimData.getVictim() != null) && !((HunterEntity)entity).getVulnarble() && entity.level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
+        if ((ClientVictimData.getVictim() != null) && !((HunterEntity)entity).isVulnarable() && entity.level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
 //            System.out.println("Not null");
                 // Player player = entity.level.getPlayerByUUID(ClientVictimData.getVictim());
 //            System.out.println("Victim exists");

@@ -8,7 +8,7 @@ import com.way.suslovila.entity.hunter.pushAttack.RenderPushAttackHunter;
 import com.way.suslovila.entity.hunter.teleport.RenderHunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.RenderExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.RenderSpeedArrow;
-import com.way.suslovila.entity.shadowGrapEntity.RenderShadowGrab;
+import com.way.suslovila.entity.shadowGrabEntity.RenderShadowGrab;
 import com.way.suslovila.entity.shadowgardenentity.RenderShadowGarden;
 import com.way.suslovila.event.ModEventBusEventsAll;
 import com.way.suslovila.event.ServerProxy;
@@ -74,9 +74,10 @@ import java.util.function.Consumer;
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(MysticalCreatures.MOD_ID)
 public class MysticalCreatures {
+    //todo: доделать ориент
     ServerProxy PROXY;
     public static SimpleChannel NETWORK;
-
+public static final double maxShadowParticleRadius = 1.5;
 
     public static final String MOD_ID = "mysticalcreatures";
     // Directly reference a slf4j logger
@@ -164,6 +165,8 @@ public class MysticalCreatures {
         EntityRenderers.register(ModEntityTypes.SHADOW_GRAB.get(), RenderShadowGrab::new);
         EntityRenderers.register(ModEntityTypes.SHADOW_GARDEN.get(), RenderShadowGarden::new);
         EntityRenderers.register(ModEntityTypes.HUNTER_PUSH.get(), RenderPushAttackHunter::new);
+        EntityRenderers.register(ModEntityTypes.SHADOW_MONSTER.get(), RenderPushAttackHunter::new);
+
 
 
     }

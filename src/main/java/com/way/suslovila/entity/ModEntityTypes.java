@@ -9,7 +9,7 @@ import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
 import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
-import com.way.suslovila.entity.shadowGrapEntity.ShadowGrabEntity;
+import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.entity.shadowgardenentity.ShadowGardenEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import net.minecraft.resources.ResourceLocation;
@@ -66,7 +66,7 @@ public class ModEntityTypes {
     public static final RegistryObject<EntityType<ShadowGrabEntity>> SHADOW_GRAB =
             ENTITY_TYPES.register("shadow_grab",
                     () -> EntityType.Builder.of(ShadowGrabEntity::new, MobCategory.MISC)
-                            .sized(2f, 2f)
+                            .sized(3f, 2f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "shadow_grab").toString()));
 
     public static final RegistryObject<EntityType<ShadowGardenEntity>> SHADOW_GARDEN =
@@ -80,7 +80,11 @@ public class ModEntityTypes {
                     () -> EntityType.Builder.of(PushAttackHunter::new, MobCategory.MISC)
                             .sized(2f, 2f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "hunter_push").toString()));
-
+    public static final RegistryObject<EntityType<PushAttackHunter>> SHADOW_MONSTER =
+            ENTITY_TYPES.register("shadow_monster",
+                    () -> EntityType.Builder.of(PushAttackHunter::new, MobCategory.MISC)
+                            .sized(2f, 2f)
+                            .build(new ResourceLocation(MysticalCreatures.MOD_ID, "shadow_monster").toString()));
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);
     }
