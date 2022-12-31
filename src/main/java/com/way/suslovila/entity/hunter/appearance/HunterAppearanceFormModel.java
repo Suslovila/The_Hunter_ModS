@@ -21,17 +21,17 @@ public class HunterAppearanceFormModel extends AnimatedGeoModel<HunterAppearance
     public float i = 0;
     @Override
     public ResourceLocation getModelLocation(HunterAppearanceFormEntity object) {
-        return new ResourceLocation(MysticalCreatures.MOD_ID, "geo/hunterappearanceform.geo.json");
+        return new ResourceLocation(MysticalCreatures.MOD_ID, "geo/hunter.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureLocation(HunterAppearanceFormEntity object) {
-        return new ResourceLocation(MysticalCreatures.MOD_ID, "textures/entity/hunter/hunterteleportform.png");
+        return new ResourceLocation(MysticalCreatures.MOD_ID, "textures/entity/hunter/hunter.png");
     }
 
     @Override
     public ResourceLocation getAnimationFileLocation(HunterAppearanceFormEntity animatable) {
-        return new ResourceLocation(MysticalCreatures.MOD_ID, "animations/hunterappearanceform.animation.json");
+        return new ResourceLocation(MysticalCreatures.MOD_ID, "animations/hunter.animation.json");
     }
 
     @Override

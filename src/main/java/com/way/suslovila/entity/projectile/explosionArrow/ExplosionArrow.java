@@ -69,7 +69,7 @@ public class ExplosionArrow extends AbstractArrow implements IAnimatable {
 
     System.out.println("Just hit");
 
-    if(!level.isClientSide) {
+    if(!level.isClientSide && tickCount != 0) {
         this.discard();
 
     }

@@ -3,6 +3,7 @@ package com.way.suslovila.savedData.clientSynch;
 import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
+import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -59,7 +60,9 @@ public class Messages {
     }
 
 
-
+    public static <MSG> void sendToHunter(MSG message, HunterTeleportFormEntity entity) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
+    }
     public static <MSG> void sendToHunter(MSG message, HunterAppearanceFormEntity entity) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
     }

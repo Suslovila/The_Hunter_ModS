@@ -1,12 +1,20 @@
 package com.way.suslovila.entity.hunter.teleport;
 
 import com.way.suslovila.particles.TailBlackParticles;
+import com.way.suslovila.savedData.SaveVictim;
+import com.way.suslovila.savedData.clientSynch.Messages;
+import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -16,14 +24,13 @@ import software.bernie.geckolib3.core.controller.AnimationController;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
+import software.bernie.geckolib3.core.processor.IBone;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 public class HunterTeleportFormEntity extends Entity implements IAnimatable {
 private int timer = lifeTime;
-public final static int lifeTime = 24;
+public final static int lifeTime = 23;
     private HashMap<Vec3, ArrayList<Object>> cordsForShadowsAroundHand = new HashMap<>();
 
     private AnimationFactory factory = new AnimationFactory(this);
@@ -43,6 +50,20 @@ public final static int lifeTime = 24;
 
         }
         if(!level.isClientSide()){
+            List<Entity> entities = level.getEntities(this, new AABB(this.getX() - 40.0D, this.getY() - 40.0D, this.getZ() - 40.0D, this.getX() + 40.0D, this.getY() + 40.0D, this.getZ() + 40.0D), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
+            boolean flag = true;
+            for (int i = 0; i < entities.size() && flag; i++) {
+                if (entities.get(i) instanceof Player && SaveVictim.get(this.level).getVictim() != null && !SaveVictim.get(this.level).getVictim().equals("novictim") && UUID.fromString(SaveVictim.get(this.level).getVictim()).equals(((Player) entities.get(i)).getUUID())) {
+                    flag = false;
+                    Messages.sendToHunter(new PacketSyncVictimToClient(UUID.fromString(SaveVictim.get(this.level).getVictim())), this);
+
+                }
+            }
+            if (flag) {
+                Messages.sendToHunter(new PacketSyncVictimToClient(UUID.randomUUID()), this);
+
+            }
+
             for(int hl = 0; hl < 2; hl++){
                 if (cordsForShadowsAroundHand.size() < 14) {
                     double radius = random.nextDouble(0.3, 1.4);
@@ -140,6 +161,18 @@ public final static int lifeTime = 24;
     public void registerControllers(AnimationData data) {
         data.addAnimationController(new AnimationController(this, "controller",
                 0, this::predicate));
+    }
+
+    public void lookAtVictim(EntityAnchorArgument.Anchor pAnchor, Vec3 pTarget, IBone bone) {
+        Vec3 vec3 = pAnchor.apply(this);
+        double dx = pTarget.x - vec3.x;
+        double dz = pTarget.z - vec3.z;
+        //bone.setRotationY(Mth.wrapDegrees((float)(Math.atan2(dx,dz))));
+////    bone.setRotationY(Mth.wrapDegrees((float)(Mth.atan2(d2, d0) * (double)(180F / (float)Math.PI)) - 90.0F));
+        this.setYRot(Mth.wrapDegrees(-(float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI))));
+        //  this.setYHeadRot((float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI)));
+        // this.yRotO = this.getYRot();
+
     }
 
 }

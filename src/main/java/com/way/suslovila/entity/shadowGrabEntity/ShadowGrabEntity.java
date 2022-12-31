@@ -74,6 +74,10 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
 //            return PlayState.STOP;
 //
 //        }
+        if(isDeadOrDying()){
+            event.getController().setAnimation(new AnimationBuilder().addAnimation("shadowgarden.animation.waiting", true));
+            return PlayState.CONTINUE;
+        }
             if(getEntityData().get(ISREADYTOCATCH) > 30) {
             if(getIsReadyToCatch() < 57) {
                 event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.shadowgarden.catch2", false));
@@ -147,6 +151,8 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
 public void baseTick(){
         super.baseTick();
         if(!level.isClientSide()) {
+            if(deathTime>18)
+                discard();
             System.out.println("IS ready to catch: " + getIsReadyToCatch());
 
 if(getIsReadyToCatch() > 31 && !hasCaughtPlayer())kill();

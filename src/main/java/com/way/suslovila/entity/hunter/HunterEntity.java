@@ -25,11 +25,13 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.IAnimationTickable;
@@ -137,8 +139,9 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
              if (this.getBrightness() > maxLight) {
                  if(!getActualTask().equals("vulnarable"))setActualTask("falling");
            } else {
+                 Player player = Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim())));
                  //if player is not moving, Hunter will try to catch him with shadows:
-                 if (getEntityData().get(SHOOTPHASE4) == 18 && Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()))).getEyePosition().distanceTo(new Vec3(getXCoordToAim(), getYCoordToAim(), getZCoordToAim()))< 0.1 && Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()))).getBrightness() <= maxLight) {
+                 if (getEntityData().get(SHOOTPHASE4) == 18 && player.getEyePosition().distanceTo(new Vec3(getXCoordToAim(), getYCoordToAim(), getZCoordToAim()))< 0.1 && player.getBrightness() <= maxLight && level.getBlockState(new BlockPos(player.getBlockX(), player.getBlockY() - 1,player.getBlockZ())).getMaterial().blocksMotion()) {
                      if (random.nextInt(5) == 4) {
 
                      }else {
@@ -188,8 +191,10 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                     while (iterator.hasNext()) {
                                         BlockPos block = iterator.next();
                                         if(!(this.level.getBlockState(block).isAir())) {
-                                            countForBlocks++;
-                                            blocks.add(this.level.getBlockState(block).getBlock());
+                                            if(level.getBlockState(block).getMaterial().blocksMotion()) {
+                                                countForBlocks++;
+                                                blocks.add(this.level.getBlockState(block).getBlock());
+                                            }
                                             if (this.level.getBlockState(block).getBlock().getExplosionResistance() >=Blocks.OBSIDIAN.getExplosionResistance()) {
                                                 isBadBlockThere = true;
                                             }
@@ -197,7 +202,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                     }
                                     System.out.println(countForBlocks);
                                     System.out.println(blocks);
-                                    if (blocks.size() == 0 || BehaviorUtils.canSee(this, player)) {
+                                    if (blocks.size() == 0 || BehaviorUtils.canSee(this, player) || level.clip(new ClipContext(player.getEyePosition(), getEyePosition(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)).getType() == HitResult.Type.MISS) {
                                         SpeedArrow arrow = new SpeedArrow(ModEntityTypes.SPEED_ARROW.get(), this.level);
                                         arrow.setPos(arrowXPos, arrowYpos, arrowZpos);
                                         Vec3 destination = new Vec3(player.getX() - arrowXPos, player.getY() + 1.5F - arrowYpos, player.getZ() - arrowZpos);
@@ -210,7 +215,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                     }
                                     //if there are blocks:
                                     else{
-                                        if(blocks.size() < 9 && !isBadBlockThere){
+                                        if(!isBadBlockThere){
                                             ExplosionArrow arrow = new ExplosionArrow(ModEntityTypes.EXPLOSION_ARROW.get(), this.level);
                                             arrow.setPos(arrowXPos, arrowYpos, arrowZpos);
                                             Vec3 destination = new Vec3(player.getX() - arrowXPos, player.getY() + 1.5F - arrowYpos, player.getZ() - arrowZpos);
