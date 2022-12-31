@@ -1,8 +1,7 @@
 {
 	"format_version": "1.8.0",
 	"animations": {
-		"hunter.animation.preparetoshoot": {
-			"loop": "hold_on_last_frame",
+		"hunter.animation.prepareForShoot": {
 			"animation_length": 0.25,
 			"anim_time_update": "query.anim_time + query.delta_time*1",
 			"bones": {
@@ -7360,8 +7359,7 @@
 				}
 			}
 		},
-		"hunter.animation.underlight": {
-			"loop": "hold_on_last_frame",
+		"hunter.animation.falling": {
 			"animation_length": 1.20833,
 			"bones": {
 				"body": {
@@ -8543,7 +8541,7 @@
 				}
 			}
 		},
-		"hunter.animation.underlightbreath": {
+		"hunter.animation.vulnarable": {
 			"loop": true,
 			"animation_length": 1.20833,
 			"bones": {
@@ -12626,7 +12624,6 @@
 			}
 		},
 		"hunter.animation.shootPhase3": {
-			"loop": true,
 			"animation_length": 0.875,
 			"bones": {
 				"body": {
@@ -13861,7 +13858,6 @@
 			}
 		},
 		"hunter.animation.shootPhase2": {
-			"loop": true,
 			"animation_length": 1.20833,
 			"bones": {
 				"body": {
@@ -14942,7 +14938,6 @@
 			}
 		},
 		"hunter.animation.shootPhase1": {
-			"loop": true,
 			"animation_length": 0.625,
 			"bones": {
 				"body": {
@@ -16936,8 +16931,8 @@
 				}
 			}
 		},
-		"hunter.animation.prepareforgrab": {
-			"animation_length": 1.54167,
+		"hunter.animation.summonShadows": {
+			"animation_length": 1.70833,
 			"bones": {
 				"body": {
 					"rotation": {
@@ -17026,7 +17021,7 @@
 							"easing": "easeOutQuart"
 						},
 						"1.5417": {
-							"vector": [-83.8797, 10.93938, 1.16128],
+							"vector": [-78.54174, 22.13298, -0.27391],
 							"easing": "easeInExpo"
 						}
 					},
@@ -17414,7 +17409,8 @@
 				}
 			}
 		},
-		"hunter.animation.grab": {
+		"hunter.animation.controlShadows": {
+			"loop": true,
 			"animation_length": 0.91667,
 			"bones": {
 				"body": {
@@ -17440,7 +17436,7 @@
 				},
 				"leftArm": {
 					"rotation": {
-						"vector": [-83.8797, 10.93938, 1.16128],
+						"vector": [-78.54174, 22.13298, -0.27391],
 						"easing": "easeInExpo"
 					},
 					"position": {
@@ -17579,6 +17575,9 @@
 					}
 				}
 			}
+		},
+		"animation.model.noAction": {
+			"loop": true
 		}
 	},
 	"geckolib_format_version": 2
