@@ -7,10 +7,11 @@ import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib3.model.AnimatedTickingGeoModel;
 
 import javax.annotation.Nullable;
 
-public class PushAttackHunterModel extends AnimatedGeoModel<PushAttackHunter> {
+public class PushAttackHunterModel extends AnimatedTickingGeoModel<PushAttackHunter> {
     public float i = 0;
     @Override
     public ResourceLocation getModelLocation(PushAttackHunter object) {

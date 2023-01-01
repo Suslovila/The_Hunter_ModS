@@ -64,16 +64,81 @@ public class ExplosionArrow extends AbstractArrow implements IAnimatable {
     public AnimationFactory getFactory() {
         return factory;
     }
+//@Override
+//    protected void onHit(HitResult pResult) {
+//    System.out.println("Just hit");
+//    if (!level.isClientSide && tickCount != 0) {
+//        this.discard();
+//    }
+//}
 @Override
-    protected void onHit(HitResult pResult) {
+    protected void onHitEntity(EntityHitResult pResult) {
+    if (!level.isClientSide) {
+        BlockPos pos = pResult.getEntity().blockPosition();
+        for (int x = pos.getX() - 5; x < pos.getX() + 5; x++) {
+            for (int y = pos.getY() - 5; y < pos.getY() + 5; y++) {
+                for (int z = pos.getZ() - 5; z < pos.getZ() + 5; z++) {
 
-    System.out.println("Just hit");
+                    BlockPos checkPos = new BlockPos(x, y, z);
+                    Vec3 vec = new Vec3(checkPos.getX() - getX(), checkPos.getY() - getY(), checkPos.getZ() - getZ());
 
-    if(!level.isClientSide && tickCount != 0) {
-        this.discard();
+                    if (vec.length() <= 5 && !(level.getBlockState(checkPos).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) && !level.getBlockState(checkPos).isAir()) {
 
-    }
+//                               if(random.nextInt(8) == 7){
+//                                   arrow.level.addParticle(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
+//                                           checkPos.getX(), checkPos.getY(), checkPos.getZ(),
+//                                           0, 0,0);
+
+                        int g = 0;
+                        while (g < 8) {
+                            ((ServerLevel)level).sendParticles(ModParticles.DISSOLATION_PARTICLES.get(),
+                                    checkPos.getX(), checkPos.getY(), checkPos.getZ(),2,
+                                    random.nextDouble(-0.25d, 0.25d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d),0.1);
+                            g++;
+                        }
+                        level.setBlockAndUpdate(checkPos, Blocks.AIR.defaultBlockState());
+
+                    }
+                }
+            }
         }
+        this.discard();
+    }
+    }
+    @Override
+    protected void onHitBlock(BlockHitResult p_36755_) {
+        if (!level.isClientSide) {
+            BlockPos pos = p_36755_.getBlockPos();
+            for (int x = pos.getX() - 5; x < pos.getX() + 5; x++) {
+                for (int y = pos.getY() - 5; y < pos.getY() + 5; y++) {
+                    for (int z = pos.getZ() - 5; z < pos.getZ() + 5; z++) {
+
+                        BlockPos checkPos = new BlockPos(x, y, z);
+                        Vec3 vec = new Vec3(checkPos.getX() - getX(), checkPos.getY() - getY(), checkPos.getZ() - getZ());
+
+                        if (vec.length() <= 5 && !(level.getBlockState(checkPos).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) && !level.getBlockState(checkPos).isAir()) {
+
+//                               if(random.nextInt(8) == 7){
+//                                   arrow.level.addParticle(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
+//                                           checkPos.getX(), checkPos.getY(), checkPos.getZ(),
+//                                           0, 0,0);
+
+                                int g = 0;
+                                while (g < 8) {
+                                    ((ServerLevel)level).sendParticles(ModParticles.DISSOLATION_PARTICLES.get(),
+                                            checkPos.getX(), checkPos.getY(), checkPos.getZ(),2,
+                                            random.nextDouble(-0.25d, 0.25d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d),0.1);
+                                    g++;
+                                }
+                            level.setBlockAndUpdate(checkPos, Blocks.AIR.defaultBlockState());
+
+                        }
+                    }
+                }
+            }
+            this.discard();
+        }
+    }
 
     @Override
     protected void defineSynchedData() {

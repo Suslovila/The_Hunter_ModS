@@ -40,7 +40,7 @@ public UUID getPreviousHunter(){
         tag.putUUID("hunter", PreviousHunter);
     return tag;
     }
-    public void KillPreviousHunter(ServerLevel level){
+    public void killPreviousHunter(ServerLevel level){
         if (getPreviousHunter() != null && level.getEntity(getPreviousHunter()) != null ){
             ((HunterEntity)level.getEntity(getPreviousHunter())).disappearInShadows();
             setDirty();

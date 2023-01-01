@@ -36,6 +36,10 @@ public class DissolationParticles extends TextureSheetParticle {
         this.quadSize *= random.nextDouble(0.1D,1D);
         BlockPos blockPos = new BlockPos(xCoord, yCoord, zCoord);
         BlockState blockState = level.getBlockState(blockPos);
+        if(blockState.isAir()) {
+            this.remove();
+            quadSize = 0;
+        }
         this.setSprite(Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getParticleIcon(blockState));
         this.lifetime = 50;
         //this.setSpriteFromAge(spriteSet);

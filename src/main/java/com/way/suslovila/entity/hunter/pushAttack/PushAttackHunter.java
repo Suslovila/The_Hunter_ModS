@@ -21,6 +21,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import software.bernie.geckolib3.core.IAnimatable;
+import software.bernie.geckolib3.core.IAnimationTickable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
 import software.bernie.geckolib3.core.controller.AnimationController;
@@ -31,7 +32,7 @@ import software.bernie.geckolib3.core.processor.IBone;
 
 import java.util.Random;
 
-public class PushAttackHunter extends Projectile implements IAnimatable {
+public class PushAttackHunter extends Projectile implements IAnimatable, IAnimationTickable {
 private int timer = 39;
 Random random = new Random();
 int chis = 3;
@@ -139,5 +140,9 @@ else{
         this.discard();
     }
 
+    @Override
+    public int tickTimer() {
+        return tickCount;
+    }
 }
 

@@ -7,6 +7,7 @@ import com.way.suslovila.entity.hunter.appearance.RenderHunterAppearanceFormEnti
 import com.way.suslovila.entity.hunter.pushAttack.RenderPushAttackHunter;
 import com.way.suslovila.entity.hunter.teleport.RenderHunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.RenderExplosionArrow;
+import com.way.suslovila.entity.projectile.ghostArrow.RenderGhostArrow;
 import com.way.suslovila.entity.projectile.speedArrow.RenderSpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.RenderShadowGrab;
 import com.way.suslovila.entity.shadowgardenentity.RenderShadowGarden;
@@ -166,7 +167,7 @@ public static final double maxShadowParticleRadius = 1.5;
         EntityRenderers.register(ModEntityTypes.SHADOW_GARDEN.get(), RenderShadowGarden::new);
         EntityRenderers.register(ModEntityTypes.HUNTER_PUSH.get(), RenderPushAttackHunter::new);
         EntityRenderers.register(ModEntityTypes.SHADOW_MONSTER.get(), RenderPushAttackHunter::new);
-
+        EntityRenderers.register(ModEntityTypes.GHOST_ARROW.get(), RenderGhostArrow::new);
 
 
     }

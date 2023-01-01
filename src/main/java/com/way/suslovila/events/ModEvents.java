@@ -87,62 +87,57 @@ public class ModEvents {
                     }
                 }
             }
-
-
-            if (!event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof HunterEntity && event.getEntityLiving().getUUID().equals(HunterAmountData.get(event.getEntityLiving().level).getPreviousHunter())) {
-                event.getEntityLiving().addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 70, 3));
-            }
         }
         if (event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof Player && event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).isPresent()) {
             System.out.println(event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).map(EntityCapabilityStorage::getHasWaterShield).get());
         }
     }
-@SubscribeEvent
-public static void mouse(InputEvent.RawMouseEvent event){
-        LocalPlayer player = Minecraft.getInstance().player;
-    if(player != null && Minecraft.getInstance().player.isPassenger()){
-            if(player.getVehicle() instanceof ShadowGrabEntity){
-              //  event.setCanceled(true);
-
-            }
-    }
-}
+//@SubscribeEvent
+//public static void mouse(InputEvent.RawMouseEvent event){
+//        LocalPlayer player = Minecraft.getInstance().player;
+//    if(player != null && Minecraft.getInstance().player.isPassenger()){
+//            if(player.getVehicle() instanceof ShadowGrabEntity){
+//              //  event.setCanceled(true);
+//
+//            }
+//    }
+//}
     @SubscribeEvent
     public static void stuffForExplosionArrow(EntityLeaveWorldEvent event) {
-
-        if (event.getEntity() instanceof ExplosionArrow) {
-            BlockPos pos = event.getEntity().blockPosition();
-            ExplosionArrow arrow = (ExplosionArrow) event.getEntity();
-            for (int x = pos.getX() - 5; x < pos.getX() + 5; x++) {
-                for (int y = pos.getY() - 5; y < pos.getY() + 5; y++) {
-                    for (int z = pos.getZ() - 5; z < pos.getZ() + 5; z++) {
-
-                        BlockPos checkPos = new BlockPos(x, y, z);
-                        Vec3 vec = new Vec3(checkPos.getX() - arrow.getX(), checkPos.getY() - arrow.getY(), checkPos.getZ() - arrow.getZ());
-
-                        if (vec.length() <= 5 && !(arrow.level.getBlockState(checkPos).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) && !arrow.level.getBlockState(checkPos).isAir()) {
-                            if (!arrow.level.isClientSide()) {
-                                arrow.level.setBlockAndUpdate(checkPos, Blocks.AIR.defaultBlockState());
-                            } else {
-//                               if(random.nextInt(8) == 7){
-//                                   arrow.level.addParticle(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
-//                                           checkPos.getX(), checkPos.getY(), checkPos.getZ(),
-//                                           0, 0,0);
-
-                                int g = 0;
-                                System.out.println(arrow.level.getBlockState(checkPos));
-                                while (g < 8) {
-                                    arrow.level.addParticle(ModParticles.DISSOLATION_PARTICLES.get(),
-                                            checkPos.getX(), checkPos.getY(), checkPos.getZ(),
-                                            random.nextDouble(-0.25d, 0.25d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d));
-                                    g++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//
+//        if (event.getEntity() instanceof ExplosionArrow) {
+//            BlockPos pos = event.getEntity().blockPosition();
+//            ExplosionArrow arrow = (ExplosionArrow) event.getEntity();
+//            for (int x = pos.getX() - 5; x < pos.getX() + 5; x++) {
+//                for (int y = pos.getY() - 5; y < pos.getY() + 5; y++) {
+//                    for (int z = pos.getZ() - 5; z < pos.getZ() + 5; z++) {
+//
+//                        BlockPos checkPos = new BlockPos(x, y, z);
+//                        Vec3 vec = new Vec3(checkPos.getX() - arrow.getX(), checkPos.getY() - arrow.getY(), checkPos.getZ() - arrow.getZ());
+//
+//                        if (vec.length() <= 5 && !(arrow.level.getBlockState(checkPos).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) && !arrow.level.getBlockState(checkPos).isAir()) {
+//                            if (!arrow.level.isClientSide()) {
+//                                arrow.level.setBlockAndUpdate(checkPos, Blocks.AIR.defaultBlockState());
+//                            } else {
+////                               if(random.nextInt(8) == 7){
+////                                   arrow.level.addParticle(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
+////                                           checkPos.getX(), checkPos.getY(), checkPos.getZ(),
+////                                           0, 0,0);
+//
+//                                int g = 0;
+//                                System.out.println(arrow.level.getBlockState(checkPos));
+//                                while (g < 8) {
+//                                    arrow.level.addParticle(ModParticles.DISSOLATION_PARTICLES.get(),
+//                                            checkPos.getX(), checkPos.getY(), checkPos.getZ(),
+//                                            random.nextDouble(-0.25d, 0.25d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d));
+//                                    g++;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     @SubscribeEvent
@@ -200,7 +195,6 @@ public static void mouse(InputEvent.RawMouseEvent event){
     @SubscribeEvent
     public static void IfHunterSpawnsEvent(EntityJoinWorldEvent event) {
         if (event.getEntity() instanceof Player){
-            boolean client = event.getEntity().level.isClientSide();
         boolean isLiving = event.getEntity() instanceof LivingEntity;
         boolean hasEffect = false;
         if(isLiving){
@@ -208,30 +202,30 @@ public static void mouse(InputEvent.RawMouseEvent event){
         }
         if (event.getEntity() instanceof LivingEntity && !event.getEntity().level.isClientSide()) {
             Messages.sendWaterShield(new MessageWaterShield(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), event.getEntity().getId()), (LivingEntity) event.getEntity());
-            boolean j = true;
         }
 //        if (event.getEntity() instanceof LivingEntity)
 //            System.out.println(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()));
     }
         if (event.getEntity() instanceof HunterEntity && !event.getEntity().level.isClientSide()) {
-            HunterAmountData data = HunterAmountData.get(event.getEntity().level);
-            if (data.getPreviousHunter() != null && ((ServerLevel) (event.getEntity().level)).getEntity(data.getPreviousHunter()) != null) {
-                HunterAmountData.get(event.getEntity().level).KillPreviousHunter((ServerLevel) event.getEntity().level);
+            ServerLevel level = (ServerLevel)event.getEntity().level;
+            HunterAmountData data = HunterAmountData.get(level);
+            if (data.getPreviousHunter() != null && (level).getEntity(data.getPreviousHunter()) != null && level.getEntity(data.getPreviousHunter()).isAlive()) {
+                HunterAmountData.get(level).killPreviousHunter(level);
             }
-            HunterAmountData.get(event.getEntity().level).setPreviousHunter(event.getEntity().getUUID());
+            HunterAmountData.get(level).setPreviousHunter(event.getEntity().getUUID());
 
-            if ((HuntersHP.get(event.getEntity().level).getHunterHP() != 0)) {
-                ((HunterEntity) event.getEntity()).setHealth((float) HuntersHP.get(event.getEntity().level).getHunterHP());
+            if (HuntersHP.get(level).getHunterHP() > 0) {
+                ((HunterEntity)event.getEntity()).setHealth((float)HuntersHP.get(level).getHunterHP());
             }
             //HunterEntity.possibleActions.put("vulnarable", (hunter)-> {((HunterEntity)hunter).setVulnarable(false);});
         }
     }
-    @SubscribeEvent
-    public static void WaterShield(EntityEvent.EnteringSection event) {
-//      if(event.getEntity() instanceof LivingEntity && !event.getEntity().level.isClientSide()) Messages.sendWaterShield(new MessageWaterShield(((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), event.getEntity().getId()), (LivingEntity)event.getEntity());
-
-
-    }
+//    @SubscribeEvent
+//    public static void WaterShield(EntityEvent.EnteringSection event) {
+////      if(event.getEntity() instanceof LivingEntity && !event.getEntity().level.isClientSide()) Messages.sendWaterShield(new MessageWaterShield(((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), event.getEntity().getId()), (LivingEntity)event.getEntity());
+//
+//
+//    }
 
     @SubscribeEvent
     public static void IfHunterBagSpawnsEvent(EntityJoinWorldEvent event) {
@@ -285,7 +279,7 @@ public static void mouse(InputEvent.RawMouseEvent event){
     }
 
     @SubscribeEvent
-    public static void playerKilledrr(LivingDropsEvent event) {
+    public static void playerKilled(LivingDropsEvent event) {
         DamageSource trap = new DamageSource(MysticalCreatures.MOD_ID + "shadow_trap");
         DamageSource clamp = new DamageSource(MysticalCreatures.MOD_ID + "pressure");
         if ((!event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof Player) && ((event.getEntityLiving().getLastHurtByMob() instanceof Zombie) || event.getSource().getMsgId() == trap.getMsgId() || event.getSource().getMsgId() == clamp.getMsgId())) {
@@ -573,24 +567,23 @@ public static void mouse(InputEvent.RawMouseEvent event){
 private static void summonHunter(Level level) {
     Player victim = level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()));
     if (victim != null) {
-        int maxDistanceXZ = 36;
-        int maxDistanceY = 10;
-        boolean flag = true;
+        int maxDistanceXZ = 30;
+        int maxDistanceY = 15;
         ArrayList<BlockPos> list = new ArrayList<BlockPos>();
-        for (int x = victim.getBlockX() - maxDistanceXZ; (x < victim.getBlockX() + maxDistanceXZ) && flag; x++) {
-            for (int z = victim.getBlockZ() - maxDistanceXZ; (z < victim.getBlockZ() + maxDistanceXZ) && flag; z++) {
-                for (int y = victim.getBlockY() - maxDistanceY; (y < victim.getBlockY() + maxDistanceY) && flag; y++) {
+        for (int x = victim.getBlockX() - maxDistanceXZ; (x < victim.getBlockX() + maxDistanceXZ); x++) {
+            for (int z = victim.getBlockZ() - maxDistanceXZ; (z < victim.getBlockZ() + maxDistanceXZ); z++) {
+                for (int y = victim.getBlockY() - maxDistanceY; (y < victim.getBlockY() + maxDistanceY); y++) {
                     if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 20) {
                         BlockPos checkPos = new BlockPos(x, y, z);
-                        BlockPos up1block = new BlockPos(x, y + 1, z);
-                        BlockPos up2block = new BlockPos(x, y + 2, z);
-                        BlockPos up3block = new BlockPos(x, y + 3, z);
+//                        BlockPos up1block = new BlockPos(x, y + 1, z);
+//                        BlockPos up2block = new BlockPos(x, y + 2, z);
+//                        BlockPos up3block = new BlockPos(x, y + 3, z);
                         BlockPos down1block = new BlockPos(x, y - 1, z);
                         //Vec3 vec3 = new Vec3(victim.getX(), victim.getEyeY(), victim.getZ());
                         //Vec3 vec31 = new Vec3(checkPos.getX(), checkPos.getY(), checkPos.getZ());
                         float brightness = level.hasChunkAt(victim.getBlockX(), victim.getBlockZ()) ? level.getBrightness(new BlockPos(victim.getX(), victim.getEyeY(), victim.getZ())) : 0.0F;
                         boolean bool = level.clip(new ClipContext(new Vec3(victim.getX(), victim.getEyeY(), victim.getZ()), new Vec3(checkPos.getX(), checkPos.getY(), checkPos.getZ()), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, victim)).getType() == HitResult.Type.MISS;
-                        if (level.getBlockState(down1block).getMaterial().blocksMotion() && bool && !level.getBlockState(down1block).isAir() && level.getBlockState(checkPos).isAir() && level.getBlockState(up1block).isAir() && level.getBlockState(up2block).isAir() && level.getBlockState(up3block).isAir() && brightness <= HunterEntity.maxLight) {
+                        if (level.getBlockState(down1block).getMaterial().blocksMotion() && bool && !level.getBlockState(down1block).isAir() && level.getBlockState(checkPos).isAir() && level.getBlockState(new BlockPos(x, y + 1, z)).isAir() && level.getBlockState(new BlockPos(x, y + 2, z)).isAir() && level.getBlockState(new BlockPos(x, y + 3, z)).isAir() && brightness <= HunterEntity.maxLight) {
                             //  flag = false;
                             //!level.getBlockState(checkPos).getCollisionShape(level, checkPos).isEmpty()
                             list.add(checkPos);
@@ -604,13 +597,33 @@ private static void summonHunter(Level level) {
         }
         HunterAppearanceFormEntity appearanceForm = new HunterAppearanceFormEntity(ModEntityTypes.HUNTER_APPEAR_FORM.get(), level);
         if (!list.isEmpty()) {
-            BlockPos finalPos = list.get(random.nextInt(list.size()));
-            appearanceForm.moveTo(finalPos.getX()+0.5, finalPos.getY(), finalPos.getZ()+0.5, 0, 0);
-            level.addFreshEntity(appearanceForm);
+            Vec3 viewVector = victim.getLookAngle();
+            BlockPos finalPos;
+            double maxAngle = 0;
+            BlockPos bestBlockPos = null;
+            for (int i = 0; i < list.size(); i++) {
+                BlockPos pos = list.get(i);
+                double angle = angleBetweenVec3(viewVector, victim.position().subtract(new Vec3(pos.getX(), pos.getY(), pos.getZ())).reverse());
+                if (angle > maxAngle) {
+                    bestBlockPos = pos;
+                    maxAngle = angle;
+                }
+            }
+            if (maxAngle != 0)
+                finalPos = bestBlockPos;
+             else
+                finalPos = list.get(random.nextInt(list.size()));
+
+
+                appearanceForm.moveTo(finalPos.getX() + 0.5, finalPos.getY(), finalPos.getZ() + 0.5, 0, 0);
+                level.addFreshEntity(appearanceForm);
+
         }
     }
 }
-
+public static double angleBetweenVec3(Vec3 vec1, Vec3 vec2){
+    return Math.acos(vec1.dot(vec2)/vec1.length()/vec2.length());
+}
 
 }
 

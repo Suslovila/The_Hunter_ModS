@@ -1,6 +1,7 @@
 package com.way.suslovila.entity.hunter.appearance;
 
 import com.way.suslovila.MysticalCreatures;
+import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.savedData.IsTheVictim.ClientVictimDataBoolean;
 import com.way.suslovila.savedData.SaveVictim;
@@ -12,13 +13,13 @@ import net.minecraft.world.level.Level;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.processor.IBone;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib3.model.AnimatedTickingGeoModel;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.UUID;
 
-public class HunterAppearanceFormModel extends AnimatedGeoModel<HunterAppearanceFormEntity> {
-    public float i = 0;
+public class HunterAppearanceFormModel extends AnimatedTickingGeoModel<HunterAppearanceFormEntity> {
     @Override
     public ResourceLocation getModelLocation(HunterAppearanceFormEntity object) {
         return new ResourceLocation(MysticalCreatures.MOD_ID, "geo/hunter.geo.json");
@@ -50,7 +51,7 @@ public class HunterAppearanceFormModel extends AnimatedGeoModel<HunterAppearance
            // entity.rotate60degrees(bone, i);
 
 
-            entity.lookAtVictim(EntityAnchorArgument.Anchor.FEET, entity.level.getPlayerByUUID(ClientVictimData.getVictim()).position(), this.getAnimationProcessor().getBone("hunter_teleport_form"));
+           entity.lookAtVictim(EntityAnchorArgument.Anchor.FEET, entity.level.getPlayerByUUID(ClientVictimData.getVictim()).getEyePosition(), this.getAnimationProcessor().getBone("head2"));
         }
     }
 }

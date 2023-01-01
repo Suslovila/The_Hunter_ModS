@@ -7,10 +7,11 @@ import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib3.model.AnimatedTickingGeoModel;
 
 import javax.annotation.Nullable;
 
-public class HunterTeleportFormModel extends AnimatedGeoModel<HunterTeleportFormEntity> {
+public class HunterTeleportFormModel extends AnimatedTickingGeoModel<HunterTeleportFormEntity> {
     @Override
     public ResourceLocation getModelLocation(HunterTeleportFormEntity object) {
         return new ResourceLocation(MysticalCreatures.MOD_ID, "geo/hunter.geo.json");
@@ -28,7 +29,7 @@ public class HunterTeleportFormModel extends AnimatedGeoModel<HunterTeleportForm
     public void setLivingAnimations(HunterTeleportFormEntity entity, Integer uniqueID, @Nullable AnimationEvent customPredicate) {
         super.setLivingAnimations(entity, uniqueID, customPredicate);
         if ((ClientVictimData.getVictim() != null) && entity.level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
-            entity.lookAtVictim(EntityAnchorArgument.Anchor.FEET, entity.level.getPlayerByUUID(ClientVictimData.getVictim()).position(), this.getAnimationProcessor().getBone("hunter_teleport_form"));
+            entity.lookAtVictim(EntityAnchorArgument.Anchor.FEET, entity.level.getPlayerByUUID(ClientVictimData.getVictim()).getEyePosition(), this.getAnimationProcessor().getBone("head2"));
         }
     }
 }

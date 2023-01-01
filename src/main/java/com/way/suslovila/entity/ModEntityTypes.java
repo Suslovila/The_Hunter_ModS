@@ -8,6 +8,7 @@ import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
 import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
+import com.way.suslovila.entity.projectile.ghostArrow.GhostArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.entity.shadowgardenentity.ShadowGardenEntity;
@@ -85,6 +86,11 @@ public class ModEntityTypes {
                     () -> EntityType.Builder.of(PushAttackHunter::new, MobCategory.MISC)
                             .sized(2f, 2f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "shadow_monster").toString()));
+    public static final RegistryObject<EntityType<GhostArrow>> GHOST_ARROW =
+            ENTITY_TYPES.register("ghost_arrow",
+                    () -> EntityType.Builder.of(GhostArrow::new, MobCategory.MISC)
+                            .sized(2f, 2f)
+                            .build(new ResourceLocation(MysticalCreatures.MOD_ID, "ghost_arrow").toString()));
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);
     }

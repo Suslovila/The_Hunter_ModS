@@ -5,6 +5,7 @@ import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
+import com.way.suslovila.entity.shadowgardenentity.ShadowGardenEntity;
 import com.way.suslovila.particles.TailBlackParticles;
 import com.way.suslovila.savedData.DelayBeforeSpawningHunter;
 import com.way.suslovila.savedData.HuntersHP;
@@ -17,6 +18,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -26,6 +28,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 
 import net.minecraft.world.level.block.Block;
@@ -50,7 +53,8 @@ import java.util.*;
 public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimationTickable {
     //todo: запретить двигать камерой; сделать хотя бы какую-то анимацию во время контроля теней
     //max light amount Hunter can stand:
-        public static float maxLight = 0.26f;
+        public static final float maxLight = 0.26f;
+        public static final int minDistanceToPlayer = 5;
         //variables for storing time of any Hunter's action
    private HashMap<Vec3, ArrayList<Object>> cordsForShadowsAroundHand = new HashMap<>();
     private static final EntityDataAccessor<String> UUIDOFGRABENTITY = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.STRING);
@@ -83,6 +87,18 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
         put("controlShadows",TIMER_FOR_CONTROLLING_SHADOWS);
         put("shadowMonster", TIMER_FOR_SHADOW_MONSTER);
     }};
+    private final static HashMap<String, Double> animationSpeedMap  = new HashMap<String,Double>() {{
+        put("prepareForShoot", 1.0);
+        put("shootPhase1", 1.5);
+        put("shootPhase2", 1.5);
+        put("shootPhase3", 1.5);
+        put("shootPhase4", 1.5);
+        put("falling",1.0);
+        put("vulnarable",1.0);
+        put("summonShadows",1.5);
+        put("controlShadows",1.0);
+        put("shadowMonster", 1.0);
+    }};
    //storing victim's position for rotations and aiming
     private static final EntityDataAccessor<Float> XCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> YCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
@@ -103,8 +119,10 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
 
     protected void registerGoals() {}
     private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
-            event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation."+getEntityData().get(ACTUAL_TASK)));
-        System.out.println("In predicate: " + getEntityData().get(ACTUAL_TASK));
+        String task = getEntityData().get(ACTUAL_TASK);
+            event.getController().setAnimationSpeed(animationSpeedMap.get(task));
+            event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation."+task));
+       // System.out.println("In predicate: " + getEntityData().get(ACTUAL_TASK));
             return PlayState.CONTINUE;
     }
     @Override
@@ -139,21 +157,29 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
              if (this.getBrightness() > maxLight) {
                  if(!getActualTask().equals("vulnarable"))setActualTask("falling");
            } else {
-                 Player player = Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim())));
+                 Player player = level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()));
                  //if player is not moving, Hunter will try to catch him with shadows:
-                 if (getEntityData().get(SHOOTPHASE4) == 18 && player.getEyePosition().distanceTo(new Vec3(getXCoordToAim(), getYCoordToAim(), getZCoordToAim()))< 0.1 && player.getBrightness() <= maxLight && level.getBlockState(new BlockPos(player.getBlockX(), player.getBlockY() - 1,player.getBlockZ())).getMaterial().blocksMotion()) {
-                     if (random.nextInt(5) == 4) {
+                 if (random.nextBoolean() && player != null && getEntityData().get(SHOOTPHASE4) == 12 && player.getEyePosition().distanceTo(new Vec3(getXCoordToAim(), getYCoordToAim(), getZCoordToAim()))< 0.1 && player.getBrightness() <= maxLight) {
+                     boolean flag = false;
+                     for(int u = -1; u < 2; u++){
+                         for(int y = -1; y < 2; y++){
+                             if(level.getBlockState(new BlockPos(player.getBlockX() + u, player.getBlockY() - 1,player.getBlockZ() + y)).getMaterial().blocksMotion())
+                                 flag = true;
+                         }
+                     }
+                     if (flag) {
+                         if (random.nextInt(5) == 4) {
 
-                     }else {
-                         setActualTask("summonShadows");
-                         ShadowGrabEntity shadowGrabEntity = new ShadowGrabEntity(ModEntityTypes.SHADOW_GRAB.get(), level);
-                         shadowGrabEntity.getEntityData().set(ShadowGrabEntity.OWNER, this.getUUID().toString());
-                         shadowGrabEntity.setPos(Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()))).position());
-                         level.addFreshEntity(shadowGrabEntity);
-                         setGrabUUID(shadowGrabEntity.getUUID().toString());
+                         } else {
+                             setActualTask("summonShadows");
+                             ShadowGrabEntity shadowGrabEntity = new ShadowGrabEntity(ModEntityTypes.SHADOW_GRAB.get(), level);
+                             shadowGrabEntity.getEntityData().set(ShadowGrabEntity.OWNER, this.getUUID().toString());
+                             shadowGrabEntity.setPos(Objects.requireNonNull(level.getPlayerByUUID(UUID.fromString(SaveVictim.get(level).getVictim()))).position());
+                             level.addFreshEntity(shadowGrabEntity);
+                             setGrabUUID(shadowGrabEntity.getUUID().toString());
+                         }
                      }
                  }
-
                     if(Objects.equals(getGrabUUID(), "NoGrabEntity") ||((ServerLevel)level).getEntity(UUID.fromString(getGrabUUID())) == null|| ((((ServerLevel)level).getEntity(UUID.fromString(getGrabUUID())))!= null &&!(((ServerLevel)level).getEntity(UUID.fromString(getGrabUUID()))).isAlive()) && isGrabbing()){
                         if(!isShooting()) setActualTask("prepareForShoot");
                     }
@@ -163,12 +189,13 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                 List<Entity> entities = level.getEntities(this, new AABB(this.getX() - 40.0D, this.getY() - 40.0D, this.getZ() - 40.0D, this.getX() + 40.0D, this.getY() + 40.0D, this.getZ() + 40.0D), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
                 for (int i = 0; i < entities.size(); i++) {
                     if (entities.get(i) instanceof Player) {
+                        ServerPlayer player = (ServerPlayer) entities.get(i);
                         if(!SaveVictim.get(this.level).getVictim().equals("novictim")) {
-                            if (UUID.fromString(SaveVictim.get(this.level).getVictim()).equals(((Player) entities.get(i)).getUUID())) {
+                            if (UUID.fromString(SaveVictim.get(this.level).getVictim()).equals(player.getUUID())) {
                                 isVictimHere = true;
                                 //if it's time to shoot arrow:
-                                if (getEntityData().get(SHOOTPHASE4) == 7) {
-                                    Player player = (Player) entities.get(i);
+                                if (getEntityData().get(SHOOTPHASE4) == 4) {
+                                   // Player player = (Player) entities.get(i);
                                     EntityAnchorArgument.Anchor pAnchor = EntityAnchorArgument.Anchor.FEET;
                                     Vec3 vec3 = pAnchor.apply(this);
                                     Vec3 Ptarget = player.position();
@@ -186,19 +213,24 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                     Iterable<BlockPos> blocksBetween = BlockPos.betweenClosed(new BlockPos(arrowXPos, arrowYpos, arrowZpos), new BlockPos(player.position().x, player.getEyeY(), player.position().z));
                                     Iterator<BlockPos> iterator = blocksBetween.iterator();
                                     int countForBlocks = 0;
-                                    boolean isBadBlockThere = false;
-                                    ArrayList<Block> blocks = new ArrayList<>();
+                                    boolean isBadCondition = false;
+                                    ArrayList<BlockPos> blocks = new ArrayList<>();
                                     while (iterator.hasNext()) {
                                         BlockPos block = iterator.next();
                                         if(!(this.level.getBlockState(block).isAir())) {
                                             if(level.getBlockState(block).getMaterial().blocksMotion()) {
                                                 countForBlocks++;
-                                                blocks.add(this.level.getBlockState(block).getBlock());
+                                                blocks.add(block);
                                             }
                                             if (this.level.getBlockState(block).getBlock().getExplosionResistance() >=Blocks.OBSIDIAN.getExplosionResistance()) {
-                                                isBadBlockThere = true;
+                                                isBadCondition = true;
                                             }
                                         }
+                                    }
+                                    for(int bl = 0; bl < blocks.size() && !isBadCondition; bl++){
+                                        BlockPos pos = blocks.get(bl);
+                                        if(Math.sqrt(this.blockPosition().distToCenterSqr(pos.getX(),pos.getY(),pos.getZ())) < minDistanceToPlayer ||Math.sqrt(player.blockPosition().distToCenterSqr(pos.getX(),pos.getY(),pos.getZ())) > 6)
+                                            isBadCondition = true;
                                     }
                                     System.out.println(countForBlocks);
                                     System.out.println(blocks);
@@ -215,11 +247,11 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                     }
                                     //if there are blocks:
                                     else{
-                                        if(!isBadBlockThere){
+                                        if(!isBadCondition){
                                             ExplosionArrow arrow = new ExplosionArrow(ModEntityTypes.EXPLOSION_ARROW.get(), this.level);
                                             arrow.setPos(arrowXPos, arrowYpos, arrowZpos);
                                             Vec3 destination = new Vec3(player.getX() - arrowXPos, player.getY() + 1.5F - arrowYpos, player.getZ() - arrowZpos);
-                                            arrow.setDeltaMovement(destination.scale(0.3f));
+                                            arrow.setDeltaMovement(destination.scale(destination.length()/30).scale(0.2f));
                                             this.level.addFreshEntity(arrow);
                                             arrow.setXCoordToAim((float) player.getX());
                                             arrow.setYCoordToAim((float) player.getY());
@@ -231,7 +263,6 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                     double armLength = 0.3D + 1.5;
                                     if (cordsForShadowsAroundHand.size() < 6) {
                                         double radius = random.nextDouble(0.15, 0.5);
-                                        int timer = 0;
                                         Vec3 lookVectorNormal = this.getViewVector(0);
                                         Vec3 lookVector = lookVectorNormal.scale(armLength * random.nextDouble(0.35, 0.85));
                                         Vec3 m = new Vec3(lookVectorNormal.z, 0, -lookVectorNormal.x);
@@ -242,8 +273,8 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                         arrayList.add(radius);
                                         arrayList.add(m);
                                         arrayList.add(k);
-                                        arrayList.add(timer);
-                                        cordsForShadowsAroundHand.put(new Vec3(this.position().x + lookVector.x + m.x*0.40, this.position().y + 2.7 + lookVector.y, this.position().z + lookVector.z+m.z*0.40), arrayList);
+                                        arrayList.add(random.nextInt(200));
+                                        cordsForShadowsAroundHand.put(new Vec3(this.position().x + lookVector.x + m.x*0.40 + k.x*0.2, this.position().y + 2.7 + lookVector.y+k.y*0.2, this.position().z + lookVector.z+m.z*0.40 + k.z*0.2), arrayList);
                                     }
                                     HashMap map = (HashMap) cordsForShadowsAroundHand.clone();
                                     Iterator<Vec3> iterator = map.keySet().iterator();
@@ -253,7 +284,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                                         double radius = (double)list.get(0);
                                         Vec3 m = ((Vec3)list.get(1)).scale(radius);
                                         Vec3 k = ((Vec3)list.get(2)).scale(radius);
-                                        for (int h = 0; h < 7; h++) {
+                                        for (int h = 0; h < 13; h++) {
                                             int timer = (int)list.get(3);
                                             Vec3 a = m.scale(Math.cos(timer * Math.PI / 100)).add(k.scale(Math.sin(timer * Math.PI / 100)));
                                             list.remove(3);
@@ -276,8 +307,9 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
 
                             }
                         }
+                        //ServerPlayer player = (ServerPlayer)entities.get(i);
                         //if player is too near to Hunter:
-                        if (entities.get(i).distanceTo(this) < 0) {if(!isVulnarable()) this.disappearInShadows();}
+                        if (player.distanceTo(this) < 0) {if(!isVulnarable()) disappearInShadows();}
                     }
 
                 }
@@ -294,10 +326,10 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                         EntityAnchorArgument.Anchor pAnchor = EntityAnchorArgument.Anchor.FEET;
                         Vec3 pTarget = player.getEyePosition();
                         Vec3 vec3 = pAnchor.apply(this);
-                        double dx = pTarget.x - vec3.x;
-                        double dz = pTarget.z - vec3.z;
-                        double angle = (-Math.toDegrees(((float)(Math.atan2(dx,dz)))));
-                        this.setYBodyRot((float)angle);
+//                        double dx = pTarget.x - vec3.x;
+//                        double dz = pTarget.z - vec3.z;
+                        //double angle = (-Math.toDegrees(((float)(Math.atan2(pTarget.x - vec3.x,pTarget.z - vec3.z)))));
+                        this.setYBodyRot((float)(-Math.toDegrees(((float)(Math.atan2(pTarget.x - vec3.x,pTarget.z - vec3.z))))));
                         this.getLookControl().setLookAt(player);
                         setXCoordToAim((float)player.getEyePosition().x);
                         setYCoordToAim((float)player.getEyePosition().y);
@@ -318,17 +350,17 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
                 //when are supposed to end, some actions should start other particular ones
                 if (getActualTask().equals("prepareForShoot") && getEntityData().get(TIMER_FOR_PREPARING) == 5)
                     setActualTask("shootPhase1");
-                if (getActualTask().equals("shootPhase1") && getEntityData().get(SHOOTPHASE1) == 13)
+                if (getActualTask().equals("shootPhase1") && getEntityData().get(SHOOTPHASE1) == 9)
                     setActualTask("shootPhase2");
-                if (getActualTask().equals("shootPhase2") && getEntityData().get(SHOOTPHASE2) == 25)
+                if (getActualTask().equals("shootPhase2") && getEntityData().get(SHOOTPHASE2) == 17)
                     setActualTask("shootPhase3");
-                if (getActualTask().equals("shootPhase3") && getEntityData().get(SHOOTPHASE3) == 18)
+                if (getActualTask().equals("shootPhase3") && getEntityData().get(SHOOTPHASE3) == 12)
                     setActualTask("shootPhase4");
-                if (getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) == 19)
+                if (getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) == 13)
                     setActualTask("shootPhase1");
 
 
-                if (getActualTask().equals("summonShadows") && getEntityData().get(TIMER_FOR_SUMMONING_SHADOWS) >= 30)
+                if (getActualTask().equals("summonShadows") && getEntityData().get(TIMER_FOR_SUMMONING_SHADOWS) >= ShadowGrabEntity.prepareTime)
                     setActualTask("controlShadows");
 
 
@@ -337,7 +369,7 @@ public class HunterEntity extends PathfinderMob implements IAnimatable, IAnimati
 
             System.out.println("Task at the end: " + getActualTask());
             //should we rotate Hunter's hands?
-           if(getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) < 16){
+           if(getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) < 11){
                setShouldRotateHandsForShooting(true);
            }
            else{
@@ -413,7 +445,7 @@ public void disappearInShadows(){
         getEntityData().define(YCoord, 0f);
         getEntityData().define(TIMER_FOR_SUMMONING_SHADOWS,0);
         getEntityData().define(TIMER_FOR_CONTROLLING_SHADOWS,0);
-getEntityData().define(ACTUAL_TASK, "noAction");
+getEntityData().define(ACTUAL_TASK, "prepareForShoot");
         getEntityData().define(SHOOTPHASE1, 0);
         getEntityData().define(SHOOTPHASE2, 0);
         getEntityData().define(SHOOTPHASE3, 0);

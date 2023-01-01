@@ -33,7 +33,8 @@ public class ModEventBusEventsAll {
         event.put(ModEntityTypes.HUNTER.get(), HunterEntity.setAttributes());
         event.put(ModEntityTypes.TRAP.get(), TrapEntity.setAttributes());
         event.put(ModEntityTypes.SHADOW_GRAB.get(), ShadowGrabEntity.setAttributes());
-
+        event.put(ModEntityTypes.HUNTER_APPEAR_FORM.get(), HunterEntity.setAttributes());
+        event.put(ModEntityTypes.HUNTER_TELEPORT_FORM.get(), HunterEntity.setAttributes());
     }
     @SubscribeEvent
     public static void registerParticleFactories(final ParticleFactoryRegisterEvent event) {

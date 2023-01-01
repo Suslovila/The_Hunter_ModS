@@ -13,15 +13,17 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySelector;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import software.bernie.geckolib3.core.IAnimatable;
+import software.bernie.geckolib3.core.IAnimationTickable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
 import software.bernie.geckolib3.core.controller.AnimationController;
@@ -32,7 +34,7 @@ import software.bernie.geckolib3.core.processor.IBone;
 
 import java.util.*;
 
-public class HunterAppearanceFormEntity extends Entity implements IAnimatable {
+public class HunterAppearanceFormEntity extends PathfinderMob implements IAnimatable, IAnimationTickable {
     private int timer = lifeTime;
     public static final int lifeTime = 26;
     Random random = new Random();
@@ -42,11 +44,9 @@ public class HunterAppearanceFormEntity extends Entity implements IAnimatable {
     int chis = 3;
     private AnimationFactory factory = new AnimationFactory(this);
 
-    public HunterAppearanceFormEntity(EntityType<?> pEntityType, Level pLevel) {
-        super(pEntityType, pLevel);
+    public HunterAppearanceFormEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
+        super(entityType, level);
         this.noPhysics = false;
-
-
     }
 
     @Override
@@ -60,7 +60,13 @@ public class HunterAppearanceFormEntity extends Entity implements IAnimatable {
                 if (entities.get(i) instanceof Player && SaveVictim.get(this.level).getVictim() != null && !SaveVictim.get(this.level).getVictim().equals("novictim") && UUID.fromString(SaveVictim.get(this.level).getVictim()).equals(((Player) entities.get(i)).getUUID())) {
                     flag = false;
                     Messages.sendToHunter(new PacketSyncVictimToClient(UUID.fromString(SaveVictim.get(this.level).getVictim())), this);
-
+                    Player player = level.getPlayerByUUID(UUID.fromString(SaveVictim.get(this.level).getVictim()));
+                    if(player != null) {
+                        Vec3 pTarget = player.getEyePosition();
+                        Vec3 vec3 = EntityAnchorArgument.Anchor.FEET.apply(this);
+                        this.setYBodyRot((float) (-Math.toDegrees(((float) (Math.atan2(pTarget.x - vec3.x, pTarget.z - vec3.z))))));
+                        this.getLookControl().setLookAt(player);
+                    }
                 }
             }
             if (flag) {
@@ -86,9 +92,9 @@ public class HunterAppearanceFormEntity extends Entity implements IAnimatable {
                 }
             }
             for(int hl = 0; hl < 2; hl++){
-                if (cordsForShadowsAroundHand.size() < 14) {
-                    double radius = random.nextDouble(0.3, 1.4);
-                    int timer = 0;
+                if (cordsForShadowsAroundHand.size() < 11) {
+                    //double radius = random.nextDouble(0.3, 1.4);
+                    //int timer = 0;
                     Vec3 lookVector = this.getViewVector(0);
                     Vec3 lookVectorNormal = new Vec3(lookVector.x + random.nextDouble(-2, 2), 0, lookVector.z + random.nextDouble(-2, 2));
                     Vec3 m = new Vec3(lookVectorNormal.z, 0, -lookVectorNormal.x);
@@ -97,12 +103,12 @@ public class HunterAppearanceFormEntity extends Entity implements IAnimatable {
                     Vec3 k = new Vec3(0, -1, 0);
                     //k = new Vec3(k.x, -Math.abs(k.y), k.z);
                     ArrayList<Object> arrayList = new ArrayList<Object>();
-                    arrayList.add(radius);
+                    arrayList.add(random.nextDouble(0.3, 1.4));
                     arrayList.add(m);
                     arrayList.add(k);
                     arrayList.add(random.nextDouble(0.1D, 0.305D));
-                    arrayList.add(timer);
-                    cordsForShadowsAroundHand.put(new Vec3(this.position().x + random.nextDouble(-1.3, 1.3), this.position().y + random.nextDouble(-1.3, 1.3), this.position().z + random.nextDouble(-1.3, 1.3)), arrayList);
+                    arrayList.add(0);
+                    cordsForShadowsAroundHand.put(new Vec3(this.position().x + random.nextDouble(-1.3, 1.3), this.position().y + random.nextDouble( 1.3), this.position().z + random.nextDouble(-1.3, 1.3)), arrayList);
                 }
             }
             HashMap<Vec3, ArrayList> map = (HashMap) cordsForShadowsAroundHand.clone();
@@ -164,26 +170,15 @@ public class HunterAppearanceFormEntity extends Entity implements IAnimatable {
         return PlayState.CONTINUE;
     }
 
-    @Override
-    protected void defineSynchedData() {
+//    @Override
+//    protected void defineSynchedData() {
+//
+//    }
 
-    }
-
-    @Override
-    protected void readAdditionalSaveData(CompoundTag pCompound) {
-
-    }
-
-    @Override
-    protected void addAdditionalSaveData(CompoundTag pCompound) {
-
-    }
-
-    @Override
-    public Packet<?> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-
-    }
+//    @Override
+//    public Packet<?> getAddEntityPacket() {
+//        return NetworkHooks.getEntitySpawningPacket(this);
+//    }
 
 
     @Override
@@ -197,17 +192,25 @@ public class HunterAppearanceFormEntity extends Entity implements IAnimatable {
                 0, this::predicate));
     }
 
-    public void lookAtVictim(EntityAnchorArgument.Anchor pAnchor, Vec3 pTarget, IBone bone) {
-        Vec3 vec3 = pAnchor.apply(this);
-  double dx = pTarget.x - vec3.x;
-    double dz = pTarget.z - vec3.z;
-    //bone.setRotationY(Mth.wrapDegrees((float)(Math.atan2(dx,dz))));
-////    bone.setRotationY(Mth.wrapDegrees((float)(Mth.atan2(d2, d0) * (double)(180F / (float)Math.PI)) - 90.0F));
-        this.setYRot(Mth.wrapDegrees(-(float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI))));
-  //  this.setYHeadRot((float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI)));
-      // this.yRotO = this.getYRot();
+    public void lookAtVictim(EntityAnchorArgument.Anchor pAnchor, Vec3 pTarget, IBone head) {
+        Vec3 vec3 = position().add(0,(3.22D) * tickCount/lifeTime,0);
+        double dx = pTarget.x - vec3.x;
+        double dz = pTarget.z - vec3.z;
+        double xz = Math.sqrt(dx * dx + dz * dz);
+        double dy = pTarget.y-vec3.y;
+        head.setRotationX(Mth.wrapDegrees((float) (Math.atan2(dy, xz))));
+        double angle = (-Math.toDegrees(((float) (Math.atan2(dx, dz)))));
+        this.lerpYRot = (float) angle;
+        this.setYBodyRot((float) angle);
 
     }
-
+    @Override
+    public int tickTimer() {
+        return tickCount;
+    }
+    @Override
+    public boolean hurt(DamageSource pSource, float pAmount) {
+        return false;
+    }
 }
 
