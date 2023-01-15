@@ -56,6 +56,11 @@ public class Messages {
                 .consumer(MessageWaterShield::handle)
                 .add();
 
+        net.messageBuilder(MessageIsVictim.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(MessageIsVictim::new)
+                .encoder(MessageIsVictim::toBytes)
+                .consumer(MessageIsVictim::handle)
+                .add();
 
     }
 

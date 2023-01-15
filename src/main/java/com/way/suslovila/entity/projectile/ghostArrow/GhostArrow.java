@@ -5,10 +5,16 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -20,6 +26,8 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+import java.util.List;
+
 public class GhostArrow extends AbstractArrow implements IAnimatable, IAnimationTickable {
     private AnimationFactory factory = new AnimationFactory(this);
     private static final EntityDataAccessor<Float> XCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
@@ -28,8 +36,8 @@ public class GhostArrow extends AbstractArrow implements IAnimatable, IAnimation
 
     public GhostArrow(EntityType<? extends AbstractArrow> p_36721_, Level p_36722_) {
         super(p_36721_, p_36722_);
-        this.noCulling = true;
-        //this.noPhysics = true;
+        noPhysics = true;
+        //setNoGravity(true);
     }
 
     @Override
@@ -96,12 +104,14 @@ public class GhostArrow extends AbstractArrow implements IAnimatable, IAnimation
     @Override
 
     protected void onHitEntity(EntityHitResult pResult) {
-super.onHitEntity(pResult);
+        super.onHitEntity(pResult);
+        this.setDeltaMovement(this.getDeltaMovement().scale(0.01));
     }
     @Override
-    protected void onHitBlock(BlockHitResult pResult) {
-        if(level.isClientSide()){
-            level.addParticle(ParticleTypes.WHITE_ASH, blockPosition().getX(), blockPosition().getY(),blockPosition().getZ(), random.nextDouble(-0.1,0.1),random.nextDouble(-0.1,0.1),random.nextDouble(-0.1,0.1));
+    public void playerTouch(Player player) {
+        if(!level.isClientSide()){
+            player.hurt(DamageSource.MAGIC, 2);
+            this.discard();
         }
     }
 }

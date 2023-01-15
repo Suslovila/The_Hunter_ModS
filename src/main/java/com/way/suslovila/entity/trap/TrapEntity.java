@@ -1,5 +1,6 @@
 package com.way.suslovila.entity.trap;
 
+import com.way.suslovila.entity.ShadowCreature;
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.particles.TailBlackParticles;
@@ -177,20 +178,20 @@ public class TrapEntity  extends PathfinderMob implements IAnimatable {
                         }
                     }
                     if (armorItem.isDamageableItem()) {
-                        if (armorItem.getDamageValue() + 10 > armorItem.getMaxDamage()) {
+                        if (armorItem.getDamageValue() + 3 > armorItem.getMaxDamage()) {
                             if (i == 0) {
-                                armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                armorItem.hurtAndBreak(3, player, (p_35997_) -> {
                                     p_35997_.broadcastBreakEvent(EquipmentSlot.FEET);
                                 });
                             } else {
-                                armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                armorItem.hurtAndBreak(3, player, (p_35997_) -> {
                                     p_35997_.broadcastBreakEvent(EquipmentSlot.LEGS);
                                 });
                             }
 
 
                         } else {
-                            armorItem.hurt(10, random, (ServerPlayer) player);
+                            armorItem.hurt(3, random, (ServerPlayer) player);
                         }
                     }
 

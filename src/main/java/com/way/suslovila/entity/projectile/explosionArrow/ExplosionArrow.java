@@ -20,7 +20,9 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -33,6 +35,7 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import java.util.Random;
 
 public class ExplosionArrow extends AbstractArrow implements IAnimatable {
+    //todo: добавить свой звук разрушения блоков
     private AnimationFactory factory = new AnimationFactory(this);
     public static Random random = new Random();
 
@@ -41,10 +44,10 @@ public class ExplosionArrow extends AbstractArrow implements IAnimatable {
         super(p_36721_, p_36722_);
     }
 
-    private static final EntityDataAccessor<Float> XCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
-    private static final EntityDataAccessor<Float> YCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
-    private static final EntityDataAccessor<Float> ZCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
-
+//    private static final EntityDataAccessor<Float> XCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
+//    private static final EntityDataAccessor<Float> YCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
+//    private static final EntityDataAccessor<Float> ZCoord = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.FLOAT);
+//
 
 
     @Override
@@ -114,9 +117,9 @@ public class ExplosionArrow extends AbstractArrow implements IAnimatable {
                     for (int z = pos.getZ() - 5; z < pos.getZ() + 5; z++) {
 
                         BlockPos checkPos = new BlockPos(x, y, z);
-                        Vec3 vec = new Vec3(checkPos.getX() - getX(), checkPos.getY() - getY(), checkPos.getZ() - getZ());
+                        //Vec3 vec = new Vec3(checkPos.getX() - getX(), checkPos.getY() - getY(), checkPos.getZ() - getZ());
 
-                        if (vec.length() <= 5 && !(level.getBlockState(checkPos).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) && !level.getBlockState(checkPos).isAir()) {
+                        if ((new Vec3(checkPos.getX() - getX(), checkPos.getY() - getY(), checkPos.getZ() - getZ())).length() <= 5 && !(level.getBlockState(checkPos).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) && !level.getBlockState(checkPos).isAir()) {
 
 //                               if(random.nextInt(8) == 7){
 //                                   arrow.level.addParticle(ModParticles.DISSOLATION_LIGHTNING_PARTICLES.get(),
@@ -124,13 +127,19 @@ public class ExplosionArrow extends AbstractArrow implements IAnimatable {
 //                                           0, 0,0);
 
                                 int g = 0;
-                                while (g < 8) {
+                                while (g < 7) {
                                     ((ServerLevel)level).sendParticles(ModParticles.DISSOLATION_PARTICLES.get(),
-                                            checkPos.getX(), checkPos.getY(), checkPos.getZ(),2,
-                                            random.nextDouble(-0.25d, 0.25d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d),0.1);
-                                    g++;
-                                }
-                            level.setBlockAndUpdate(checkPos, Blocks.AIR.defaultBlockState());
+                                            checkPos.getX(), checkPos.getY(), checkPos.getZ(),1,
+                                           random.nextDouble(-0.25d, 0.25d), random.nextDouble(-0.2d, 0.2d), random.nextDouble(-0.2d, 0.2d),0.1);
+                                   g++;
+                               }
+                            BlockState blockstate = level.getBlockState(checkPos);
+                            BlockEntity blockentity = blockstate.hasBlockEntity() ? level.getBlockEntity(checkPos) : null;
+                            //level.playSound();
+                            if(blockentity != null)
+                            Block.dropResources(blockstate, level, checkPos, blockentity, null, ItemStack.EMPTY);
+                                level.setBlockAndUpdate(checkPos,Blocks.AIR.defaultBlockState());
+                            //level.setBlockAndUpdate(checkPos, Blocks.AIR.defaultBlockState());
 
                         }
                     }
@@ -143,27 +152,29 @@ public class ExplosionArrow extends AbstractArrow implements IAnimatable {
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        getEntityData().define(XCoord, 0f);
-        getEntityData().define(ZCoord, 0f);
-        getEntityData().define(YCoord, 0f);
+//        getEntityData().define(XCoord, 0f);
+//        getEntityData().define(ZCoord, 0f);
+//        getEntityData().define(YCoord, 0f);
     }
-    public float getXCoordToAim(){
-        return getEntityData().get(XCoord);
+//    public float getXCoordToAim(){
+//        return getEntityData().get(XCoord);
+//    }
+//    public float getYCoordToAim(){
+//        return getEntityData().get(YCoord);
+//    }
+//    public float getZCoordToAim(){
+//        return getEntityData().get(ZCoord);
+//    }
+//    public void setXCoordToAim(float coord){
+//        getEntityData().set(XCoord, coord);
+//    }
+//    public void setYCoordToAim(float coord){
+//        getEntityData().set(YCoord, coord);
+//    }
+//    public void setZCoordToAim(float coord){getEntityData().set(ZCoord, coord);}
+    protected float getWaterInertia() {
+        return 0.99F;
     }
-    public float getYCoordToAim(){
-        return getEntityData().get(YCoord);
-    }
-    public float getZCoordToAim(){
-        return getEntityData().get(ZCoord);
-    }
-    public void setXCoordToAim(float coord){
-        getEntityData().set(XCoord, coord);
-    }
-    public void setYCoordToAim(float coord){
-        getEntityData().set(YCoord, coord);
-    }
-    public void setZCoordToAim(float coord){getEntityData().set(ZCoord, coord);}
-
 }
 
 

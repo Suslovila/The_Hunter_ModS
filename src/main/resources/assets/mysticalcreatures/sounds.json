@@ -1,0 +1,11 @@
+{
+  "hunt_theme": {
+    "subtitle": "sounds.mysticalcreatures.hunt_theme",
+    "sounds": [
+      {
+        "name": "mysticalcreatures:hunt_theme",
+        "stream": true
+      }
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 package com.way.suslovila.event;
 
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
+import com.way.suslovila.entity.shadowMonster.ShadowMonsterEntity;
 import com.way.suslovila.particles.*;
 import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.entity.ModEntityTypes;
@@ -35,6 +36,7 @@ public class ModEventBusEventsAll {
         event.put(ModEntityTypes.SHADOW_GRAB.get(), ShadowGrabEntity.setAttributes());
         event.put(ModEntityTypes.HUNTER_APPEAR_FORM.get(), HunterEntity.setAttributes());
         event.put(ModEntityTypes.HUNTER_TELEPORT_FORM.get(), HunterEntity.setAttributes());
+        event.put(ModEntityTypes.SHADOW_MONSTER.get(), ShadowMonsterEntity.setAttributes());
     }
     @SubscribeEvent
     public static void registerParticleFactories(final ParticleFactoryRegisterEvent event) {

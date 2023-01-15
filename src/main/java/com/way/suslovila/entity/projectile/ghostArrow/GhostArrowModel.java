@@ -29,8 +29,6 @@ public class GhostArrowModel extends AnimatedTickingGeoModel<GhostArrow> {
         if (arrow.getXCoordToAim() != 0) {
             double dx = arrow.getXCoordToAim() - arrow.getX();
             double dz = arrow.getZCoordToAim() - arrow.getZ();
-            double xz = Math.sqrt(dx * dx + dz * dz);
-            double dy = arrow.getYCoordToAim() - arrow.getY();
             arrow.setYRot(90f + Mth.wrapDegrees(-(float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI))));
             arrow.setXCoordToAim(0);
         }

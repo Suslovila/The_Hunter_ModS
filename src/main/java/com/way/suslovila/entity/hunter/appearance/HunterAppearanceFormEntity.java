@@ -1,6 +1,7 @@
 package com.way.suslovila.entity.hunter.appearance;
 
 import com.way.suslovila.entity.ModEntityTypes;
+import com.way.suslovila.entity.ShadowCreature;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.particles.ModParticles;
@@ -34,7 +35,7 @@ import software.bernie.geckolib3.core.processor.IBone;
 
 import java.util.*;
 
-public class HunterAppearanceFormEntity extends PathfinderMob implements IAnimatable, IAnimationTickable {
+public class HunterAppearanceFormEntity extends ShadowCreature implements IAnimatable, IAnimationTickable {
     private int timer = lifeTime;
     public static final int lifeTime = 26;
     Random random = new Random();
@@ -91,63 +92,64 @@ public class HunterAppearanceFormEntity extends PathfinderMob implements IAnimat
 
                 }
             }
-            for(int hl = 0; hl < 2; hl++){
-                if (cordsForShadowsAroundHand.size() < 11) {
-                    //double radius = random.nextDouble(0.3, 1.4);
-                    //int timer = 0;
-                    Vec3 lookVector = this.getViewVector(0);
-                    Vec3 lookVectorNormal = new Vec3(lookVector.x + random.nextDouble(-2, 2), 0, lookVector.z + random.nextDouble(-2, 2));
-                    Vec3 m = new Vec3(lookVectorNormal.z, 0, -lookVectorNormal.x);
-                    m = m.normalize();
-                    // Vec3 k = lookVectorNormal.cross(m);
-                    Vec3 k = new Vec3(0, -1, 0);
-                    //k = new Vec3(k.x, -Math.abs(k.y), k.z);
-                    ArrayList<Object> arrayList = new ArrayList<Object>();
-                    arrayList.add(random.nextDouble(0.3, 1.4));
-                    arrayList.add(m);
-                    arrayList.add(k);
-                    arrayList.add(random.nextDouble(0.1D, 0.305D));
-                    arrayList.add(0);
-                    cordsForShadowsAroundHand.put(new Vec3(this.position().x + random.nextDouble(-1.3, 1.3), this.position().y + random.nextDouble( 1.3), this.position().z + random.nextDouble(-1.3, 1.3)), arrayList);
-                }
-            }
-            HashMap<Vec3, ArrayList> map = (HashMap) cordsForShadowsAroundHand.clone();
-            Iterator<Vec3> iterator = map.keySet().iterator();
-            while (iterator.hasNext()) {
-                Vec3 dotInSpace = iterator.next();
-                ArrayList<Object> list = map.get(dotInSpace);
-                double radius = (double) list.get(0);
-                Vec3 m = ((Vec3) list.get(1)).scale(radius);
-                Vec3 k = ((Vec3) list.get(2)).scale(radius);
-                double particleSize = (double)list.get(3);
-                for (int h = 0; h < 22; h++) {
-                    int timer = (int) list.get(4);
-                    if (timer % 100 == 0 && timer != 0 && random.nextBoolean()) {
-                        cordsForShadowsAroundHand.remove(dotInSpace);
-                        double newRadius = random.nextDouble(0.3, 1.4);
-                        double chis = k.y*Math.cos(timer * Math.PI / 100);
-                        Vec3 newDotInSpace = new Vec3(dotInSpace.x, dotInSpace.y + chis/Math.abs(chis)*(newRadius + radius), dotInSpace.z);
-                        Vec3 newK = new Vec3(0, -k.y, 0);
-                        ArrayList<Object> newList = new ArrayList<>();
-                        newList.add(newRadius);
-                        newList.add(m.normalize());
-                        newList.add(newK.normalize());
-                        newList.add(particleSize);
-                        newList.add(timer+1);
-                        cordsForShadowsAroundHand.put(newDotInSpace, newList);
-                    }
-                    Vec3 a = m.scale(Math.sin(timer * Math.PI / 100)).add(k.scale(Math.cos(timer * Math.PI / 100)));
-                    list.remove(4);
-                    list.add(timer + 1);
-                    Vec3 endPosition = dotInSpace.add(a);
-                    ((ServerLevel) this.level).sendParticles(new TailBlackParticles.TailParticleData(random.nextDouble(particleSize-0.04*particleSize/0.3, particleSize), random.nextInt(13, 14)),
-                            endPosition.x, endPosition.y, endPosition.z, 1, 0,
-                            0, 0, 0);
-                    if (random.nextInt(200) == 37) {
-                        cordsForShadowsAroundHand.remove(dotInSpace);
-                    }
-                }
-            }
+//            for(int hl = 0; hl < 2; hl++){
+//                if (cordsForShadowsAroundHand.size() < 11) {
+//                    //double radius = random.nextDouble(0.3, 1.4);
+//                    //int timer = 0;
+//                    Vec3 lookVector = this.getViewVector(0);
+//                    Vec3 lookVectorNormal = new Vec3(lookVector.x + random.nextDouble(-2, 2), 0, lookVector.z + random.nextDouble(-2, 2));
+//                    Vec3 m = new Vec3(lookVectorNormal.z, 0, -lookVectorNormal.x);
+//                    m = m.normalize();
+//                    // Vec3 k = lookVectorNormal.cross(m);
+//                    Vec3 k = new Vec3(0, -1, 0);
+//                    //k = new Vec3(k.x, -Math.abs(k.y), k.z);
+//                    ArrayList<Object> arrayList = new ArrayList<Object>();
+//                    arrayList.add(random.nextDouble(0.3, 1.4));
+//                    arrayList.add(m);
+//                    arrayList.add(k);
+//                    arrayList.add(random.nextDouble(0.1D, 0.305D));
+//                    arrayList.add(0);
+//                    cordsForShadowsAroundHand.put(new Vec3(this.position().x + random.nextDouble(-1.3, 1.3), this.position().y + random.nextDouble( 1.3), this.position().z + random.nextDouble(-1.3, 1.3)), arrayList);
+//                }
+//            }
+//            HashMap<Vec3, ArrayList> map = (HashMap) cordsForShadowsAroundHand.clone();
+//            Iterator<Vec3> iterator = map.keySet().iterator();
+//            while (iterator.hasNext()) {
+//                Vec3 dotInSpace = iterator.next();
+//                ArrayList<Object> list = map.get(dotInSpace);
+//                double radius = (double) list.get(0);
+//                Vec3 m = ((Vec3) list.get(1)).scale(radius);
+//                Vec3 k = ((Vec3) list.get(2)).scale(radius);
+//                double particleSize = (double)list.get(3);
+//                for (int h = 0; h < 22; h++) {
+//                    int timer = (int) list.get(4);
+//                    if (timer % 100 == 0 && timer != 0 && random.nextBoolean()) {
+//                        cordsForShadowsAroundHand.remove(dotInSpace);
+//                        double newRadius = random.nextDouble(0.3, 1.4);
+//                        double chis = k.y*Math.cos(timer * Math.PI / 100);
+//                        Vec3 newDotInSpace = new Vec3(dotInSpace.x, dotInSpace.y + chis/Math.abs(chis)*(newRadius + radius), dotInSpace.z);
+//                        Vec3 newK = new Vec3(0, -k.y, 0);
+//                        ArrayList<Object> newList = new ArrayList<>();
+//                        newList.add(newRadius);
+//                        newList.add(m.normalize());
+//                        newList.add(newK.normalize());
+//                        newList.add(particleSize);
+//                        newList.add(timer+1);
+//                        cordsForShadowsAroundHand.put(newDotInSpace, newList);
+//                    }
+//                    Vec3 a = m.scale(Math.sin(timer * Math.PI / 100)).add(k.scale(Math.cos(timer * Math.PI / 100)));
+//                    list.remove(4);
+//                    list.add(timer + 1);
+//                    Vec3 endPosition = dotInSpace.add(a);
+//                    ((ServerLevel) this.level).sendParticles(new TailBlackParticles.TailParticleData(random.nextDouble(particleSize-0.04*particleSize/0.3, particleSize), random.nextInt(13, 14)),
+//                            endPosition.x, endPosition.y, endPosition.z, 1, 0,
+//                            0, 0, 0);
+//                    if (random.nextInt(200) == 37) {
+//                        cordsForShadowsAroundHand.remove(dotInSpace);
+//                    }
+//                }
+//            }
+            spawnShadowParticles(11, 22, 2, 0.3, 1.4, 0.1,0.305D, 1.3,1.3,0,1.3,1.3,1.3);
         }
     }
 

@@ -11,6 +11,7 @@ import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.ghostArrow.GhostArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
+import com.way.suslovila.entity.shadowMonster.ShadowMonsterEntity;
 import com.way.suslovila.entity.shadowgardenentity.ShadowGardenEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import net.minecraft.resources.ResourceLocation;
@@ -55,7 +56,7 @@ public class ModEntityTypes {
     public static final RegistryObject<EntityType<SpeedArrow>> SPEED_ARROW =
             ENTITY_TYPES.register("speed_arrow",
                     () -> EntityType.Builder.of(SpeedArrow::new, MobCategory.MISC)
-                            .sized(0.2f, 0.2f)
+                            .sized(0.6f, 0.6f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "speed_arrow").toString()));
 
     public static final RegistryObject<EntityType<ExplosionArrow>> EXPLOSION_ARROW =
@@ -81,18 +82,19 @@ public class ModEntityTypes {
                     () -> EntityType.Builder.of(PushAttackHunter::new, MobCategory.MISC)
                             .sized(2f, 2f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "hunter_push").toString()));
-    public static final RegistryObject<EntityType<PushAttackHunter>> SHADOW_MONSTER =
+    public static final RegistryObject<EntityType<ShadowMonsterEntity>> SHADOW_MONSTER =
             ENTITY_TYPES.register("shadow_monster",
-                    () -> EntityType.Builder.of(PushAttackHunter::new, MobCategory.MISC)
-                            .sized(2f, 2f)
+                    () -> EntityType.Builder.of(ShadowMonsterEntity::new, MobCategory.MISC)
+                            .sized(13f, 25f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "shadow_monster").toString()));
     public static final RegistryObject<EntityType<GhostArrow>> GHOST_ARROW =
             ENTITY_TYPES.register("ghost_arrow",
                     () -> EntityType.Builder.of(GhostArrow::new, MobCategory.MISC)
-                            .sized(2f, 2f)
+                            .sized(0.15f, 0.15f)
                             .build(new ResourceLocation(MysticalCreatures.MOD_ID, "ghost_arrow").toString()));
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);
+
     }
 
 

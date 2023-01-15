@@ -1,0 +1,82 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"shadowmonster.animation.bite": {
+			"animation_length": 2.125,
+			"bones": {
+				"1": {
+					"rotation": {
+						"0.0417": {
+							"vector": [66.01107, 9.82993, 32.52376]
+						},
+						"0.4167": {
+							"vector": [-29.82929, -16.01231, -7.26806],
+							"easing": "easeInOutQuart"
+						}
+					}
+				},
+				"2": {
+					"rotation": {
+						"0.0417": {
+							"vector": [-56, 0, 0]
+						},
+						"0.4167": {
+							"vector": [24, 0, 0],
+							"easing": "easeInOutQuart"
+						}
+					}
+				},
+				"bone2": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"vector": [0, 0, 0]
+					}
+				},
+				"bone3": {
+					"rotation": {
+						"0.0": {
+							"vector": [-87, 0, 0]
+						},
+						"0.375": {
+							"vector": [-90, 0, 0]
+						}
+					},
+					"position": {
+						"0.0": {
+							"vector": [2.1, -46.7, -9.4]
+						},
+						"0.375": {
+							"vector": [2.1, -28.2, -9.4],
+							"easing": "linear"
+						},
+						"1.9583": {
+							"vector": [2.1, -27.7, -9.4],
+							"easing": "linear"
+						}
+					}
+				},
+				"bone": {
+					"rotation": {
+						"vector": [5.99349, -0.0283, 0.09563]
+					}
+				}
+			}
+		},
+		"shadowmonster.animation.waiting": {
+			"animation_length": 1.66667,
+			"bones": {
+				"bone3": {
+					"rotation": {
+						"vector": [-81, 0, 0]
+					},
+					"scale": {
+						"vector": [0, 0, 0]
+					}
+				}
+			}
+		}
+	},
+	"geckolib_format_version": 2
+}

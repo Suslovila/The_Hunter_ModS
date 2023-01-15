@@ -1,8 +1,10 @@
 package com.way.suslovila.entity.shadowGrabEntity;
 
 import com.way.suslovila.MysticalCreatures;
+import com.way.suslovila.entity.ShadowCreature;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.particles.TailBlackParticles;
+import com.way.suslovila.savedData.SaveVictim;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -30,15 +32,12 @@ import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.UUID;
+import java.util.*;
 
 import static com.way.suslovila.entity.hunter.HunterEntity.maxLight;
 
 
-public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAnimationTickable {
+public class ShadowGrabEntity extends ShadowCreature implements IAnimatable, IAnimationTickable {
     //todo: сделать так, заставить игрока не разворачиваться
     @Nullable
     private UUID ownerUUID;
@@ -60,7 +59,7 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
     public static AttributeSupplier setAttributes() {
 
         return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 10.0D)
+                .add(Attributes.MAX_HEALTH, 15.0D)
                 .add(Attributes.ATTACK_DAMAGE, 0f)
                 .add(Attributes.ATTACK_SPEED, 0f)
                 .add(Attributes.MOVEMENT_SPEED, 0.3f)
@@ -172,7 +171,11 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
             System.out.println("IS ready to catch: " + getIsReadyToCatch());
 
             if (getIsReadyToCatch() > prepareTime && !hasCaughtPlayer()) kill();
-
+            if(!SaveVictim.get(level).getVictim().equals("novictim")) {
+                if (hasCaughtPlayer() && !Objects.equals(SaveVictim.get(level).getVictim(), getPassengers().get(0).getStringUUID())) kill();
+            }
+            else
+                kill();
             if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSource.DRY_OUT, 1);
 
             String owner = getEntityData().get(OWNER);
@@ -181,11 +184,12 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
             else {
                 if ((((ServerLevel) level).getEntity(UUID.fromString(owner))) == null) kill();
                 else {
-                    if (!(((ServerLevel) level).getEntity(UUID.fromString(owner))).isAlive() || ((HunterEntity) (((ServerLevel) level).getEntity(UUID.fromString(owner)))).isVulnarable())
+                    if (!(((ServerLevel) level).getEntity(UUID.fromString(owner))).isAlive() || ((HunterEntity) (((ServerLevel) level).getEntity(UUID.fromString(owner)))).isGrabbing())
                         kill();
 
                     else {
                         getLookControl().setLookAt(((ServerLevel) level).getEntity(UUID.fromString(owner)));
+                        System.out.println("Is player catched: " + hasCaughtPlayer());
                     }
                 }
 
@@ -198,7 +202,7 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
                 if (entity.isShiftKeyDown()) entity.setShiftKeyDown(false);
                 ((Player) entity).setYRot(this.getYRot());
                 entity.setYHeadRot(getYHeadRot());
-                if (tickTimer % 10 == 0) {
+                if (getEntityData().get(ISREADYTOCATCH) % 20 == 0) {
                     Player player = (Player) this.getPassengers().get(0);
                     int count1 = 0;
                     for (int i = 0; i < 4; i++) {
@@ -211,31 +215,31 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
                             }
                         }
                         if (armorItem.isDamageableItem()) {
-                            if (armorItem.getDamageValue() + 10 > armorItem.getMaxDamage()) {
+                            if (armorItem.getDamageValue() + 2 > armorItem.getMaxDamage()) {
                                 if (i == 0) {
-                                    armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                    armorItem.hurtAndBreak(2, player, (p_35997_) -> {
                                         p_35997_.broadcastBreakEvent(EquipmentSlot.FEET);
                                     });
                                 }
                                 if (i == 1) {
-                                    armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                    armorItem.hurtAndBreak(2, player, (p_35997_) -> {
                                         p_35997_.broadcastBreakEvent(EquipmentSlot.LEGS);
                                     });
                                 }
                                 if (i == 2) {
-                                    armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                    armorItem.hurtAndBreak(2, player, (p_35997_) -> {
                                         p_35997_.broadcastBreakEvent(EquipmentSlot.CHEST);
                                     });
                                 }
                                 if (i == 3) {
-                                    armorItem.hurtAndBreak(10, player, (p_35997_) -> {
+                                    armorItem.hurtAndBreak(2, player, (p_35997_) -> {
                                         p_35997_.broadcastBreakEvent(EquipmentSlot.HEAD);
                                     });
                                 }
 
 
                             } else {
-                                armorItem.hurt(10, random, (ServerPlayer) player);
+                                armorItem.hurt(2, random, (ServerPlayer) player);
                             }
                         }
 
@@ -248,63 +252,64 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
                     tickTimer = 0;
                 }
             }
-            for(int hl = 0; hl < 2; hl++){
-                if (cordsForShadowsAroundHand.size() < 10) {
-                    double radius = random.nextDouble(0.3, 1);
-                    int timer = 0;
-                    Vec3 lookVector = this.getViewVector(0);
-                    Vec3 lookVectorNormal = new Vec3(lookVector.x + random.nextDouble(-2, 2), 0, lookVector.z + random.nextDouble(-2, 2));
-                    Vec3 m = new Vec3(lookVectorNormal.z, 0, -lookVectorNormal.x);
-                    m = m.normalize();
-                    // Vec3 k = lookVectorNormal.cross(m);
-                    Vec3 k = new Vec3(0, -1, 0);
-                    //k = new Vec3(k.x, -Math.abs(k.y), k.z);
-                    ArrayList<Object> arrayList = new ArrayList<Object>();
-                    arrayList.add(radius);
-                    arrayList.add(m);
-                    arrayList.add(k);
-                    arrayList.add(random.nextDouble(0.1D, 0.2D));
-                    arrayList.add(timer);
-                    cordsForShadowsAroundHand.put(new Vec3(this.position().x + random.nextDouble(-1.5, 1.5), this.position().y + random.nextDouble( 1.5), this.position().z + random.nextDouble(-1.5, 1.5)), arrayList);
-                }
-            }
-            HashMap<Vec3, ArrayList> map = (HashMap) cordsForShadowsAroundHand.clone();
-            Iterator<Vec3> iterator = map.keySet().iterator();
-            while (iterator.hasNext()) {
-                Vec3 dotInSpace = iterator.next();
-                ArrayList<Object> list = map.get(dotInSpace);
-                double radius = (double) list.get(0);
-                Vec3 m = ((Vec3) list.get(1)).scale(radius);
-                Vec3 k = ((Vec3) list.get(2)).scale(radius);
-                double particleSize = (double)list.get(3);
-                for (int h = 0; h < 15; h++) {
-                    int timer = (int) list.get(4);
-                    if (timer % 100 == 0 && timer != 0 && random.nextBoolean()) {
-                        cordsForShadowsAroundHand.remove(dotInSpace);
-                        double newRadius = random.nextDouble(0.3, 1);
-                        double chis = k.y*Math.cos(timer * Math.PI / 100);
-                        Vec3 newDotInSpace = new Vec3(dotInSpace.x, dotInSpace.y + chis/Math.abs(chis)*(newRadius + radius), dotInSpace.z);
-                        Vec3 newK = new Vec3(0, -k.y, 0);
-                        ArrayList<Object> newList = new ArrayList<>();
-                        newList.add(newRadius);
-                        newList.add(m.normalize());
-                        newList.add(newK.normalize());
-                        newList.add(particleSize);
-                        newList.add(timer+1);
-                        cordsForShadowsAroundHand.put(newDotInSpace, newList);
-                    }
-                    Vec3 a = m.scale(Math.sin(timer * Math.PI / 100)).add(k.scale(Math.cos(timer * Math.PI / 100)));
-                    list.remove(4);
-                    list.add(timer + 1);
-                    Vec3 endPosition = dotInSpace.add(a);
-                    ((ServerLevel) this.level).sendParticles(new TailBlackParticles.TailParticleData(random.nextDouble(particleSize-0.04*particleSize/0.3, particleSize), random.nextInt(13, 14)),
-                            endPosition.x, endPosition.y, endPosition.z, 1, 0,
-                            0, 0, 0);
-                    if (random.nextInt(200) == 37) {
-                        cordsForShadowsAroundHand.remove(dotInSpace);
-                    }
-                }
-            }
+//            for(int hl = 0; hl < 2; hl++){
+//                if (cordsForShadowsAroundHand.size() < 10) {
+//                    double radius = random.nextDouble(0.3, 1);
+//                    int timer = 0;
+//                    Vec3 lookVector = this.getViewVector(0);
+//                    Vec3 lookVectorNormal = new Vec3(lookVector.x + random.nextDouble(-2, 2), 0, lookVector.z + random.nextDouble(-2, 2));
+//                    Vec3 m = new Vec3(lookVectorNormal.z, 0, -lookVectorNormal.x);
+//                    m = m.normalize();
+//                    // Vec3 k = lookVectorNormal.cross(m);
+//                    Vec3 k = new Vec3(0, -1, 0);
+//                    //k = new Vec3(k.x, -Math.abs(k.y), k.z);
+//                    ArrayList<Object> arrayList = new ArrayList<Object>();
+//                    arrayList.add(radius);
+//                    arrayList.add(m);
+//                    arrayList.add(k);
+//                    arrayList.add(random.nextDouble(0.1D, 0.2D));
+//                    arrayList.add(timer);
+//                    cordsForShadowsAroundHand.put(new Vec3(this.position().x + random.nextDouble(-1.5, 1.5), this.position().y + random.nextDouble( 1.5), this.position().z + random.nextDouble(-1.5, 1.5)), arrayList);
+//                }
+//            }
+//            HashMap<Vec3, ArrayList> map = (HashMap) cordsForShadowsAroundHand.clone();
+//            Iterator<Vec3> iterator = map.keySet().iterator();
+//            while (iterator.hasNext()) {
+//                Vec3 dotInSpace = iterator.next();
+//                ArrayList<Object> list = map.get(dotInSpace);
+//                double radius = (double) list.get(0);
+//                Vec3 m = ((Vec3) list.get(1)).scale(radius);
+//                Vec3 k = ((Vec3) list.get(2)).scale(radius);
+//                double particleSize = (double)list.get(3);
+//                for (int h = 0; h < 15; h++) {
+//                    int timer = (int) list.get(4);
+//                    if (timer % 100 == 0 && timer != 0 && random.nextBoolean()) {
+//                        cordsForShadowsAroundHand.remove(dotInSpace);
+//                        double newRadius = random.nextDouble(0.3, 1);
+//                        double chis = k.y*Math.cos(timer * Math.PI / 100);
+//                        Vec3 newDotInSpace = new Vec3(dotInSpace.x, dotInSpace.y + chis/Math.abs(chis)*(newRadius + radius), dotInSpace.z);
+//                        Vec3 newK = new Vec3(0, -k.y, 0);
+//                        ArrayList<Object> newList = new ArrayList<>();
+//                        newList.add(newRadius);
+//                        newList.add(m.normalize());
+//                        newList.add(newK.normalize());
+//                        newList.add(particleSize);
+//                        newList.add(timer+1);
+//                        cordsForShadowsAroundHand.put(newDotInSpace, newList);
+//                    }
+//                    Vec3 a = m.scale(Math.sin(timer * Math.PI / 100)).add(k.scale(Math.cos(timer * Math.PI / 100)));
+//                    list.remove(4);
+//                    list.add(timer + 1);
+//                    Vec3 endPosition = dotInSpace.add(a);
+//                    ((ServerLevel) this.level).sendParticles(new TailBlackParticles.TailParticleData(random.nextDouble(particleSize-0.04*particleSize/0.3, particleSize), random.nextInt(13, 14)),
+//                            endPosition.x, endPosition.y, endPosition.z, 1, 0,
+//                            0, 0, 0);
+//                    if (random.nextInt(200) == 37) {
+//                        cordsForShadowsAroundHand.remove(dotInSpace);
+//                    }
+//                }
+//            }
+            spawnShadowParticles(10, 15, 2, 0.3, 1,0.1D, 0.2D, 1.5, 1.5, 0, 1.5, 1.5, 1.5);
         } else {
             if (this.isDeadOrDying()) {
                 for (int i = 0; i < 70; i++) {
@@ -320,12 +325,12 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
     @Override
     public void playerTouch(Player player) {
         super.playerTouch(player);
-        if (!level.isClientSide()) {
+
 //            float distance = this.distanceTo(player);
-            if (getEntityData().get(ISREADYTOCATCH) > prepareTime && !hasCaughtPlayer() && !isDeadOrDying()) {
-                player.setShiftKeyDown(false);
-                player.startRiding(this, false);
-            }
+                if (getEntityData().get(ISREADYTOCATCH) > prepareTime && !hasCaughtPlayer() && !isDeadOrDying()) {
+                    player.setShiftKeyDown(false);
+                    player.startRiding(this, false);
+
         }
     }
 
@@ -359,12 +364,12 @@ public class ShadowGrabEntity extends PathfinderMob implements IAnimatable, IAni
     }
 
     public boolean shouldRiderFaceForward(Player player) {
-        return true;
+        return false;
     }
 
     @Override
     public boolean showVehicleHealth() {
-        return true;
+        return false;
     }
 
     public void die(DamageSource damageSource) {

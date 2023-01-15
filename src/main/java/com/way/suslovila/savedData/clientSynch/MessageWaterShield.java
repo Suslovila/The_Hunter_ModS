@@ -47,7 +47,7 @@ entityID = buf.readInt();
 
 
 
-//            ClientWaterShieldData.setDoShield(hasWaterShield);
+      //      ClientWaterShieldData.setDoShield(hasWaterShield);
         });
         return true;
     }

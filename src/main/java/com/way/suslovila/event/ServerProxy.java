@@ -2,6 +2,7 @@ package com.way.suslovila.event;
 
 
 import com.way.suslovila.MysticalCreatures;
+import com.way.suslovila.savedData.clientSynch.MessageIsVictim;
 import com.way.suslovila.savedData.clientSynch.MessageWaterShield;
 import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -44,7 +45,10 @@ public class ServerProxy {
                 .clientAcceptedVersions(version::equals)
                 .serverAcceptedVersions(version::equals)
                 .simpleChannel();
-                this.registerServerClientMessage(MessageWaterShield.class, MessageWaterShield::new, MessageWaterShield::toBytes, MessageWaterShield::handle);
+               // this.registerServerClientMessage(MessageWaterShield.class, MessageWaterShield::new, MessageWaterShield::toBytes, MessageWaterShield::handle);
+        //this.registerServerClientMessage(MessageIsVictim.class, MessageIsVictim::new, MessageIsVictim::toBytes, MessageIsVictim::handle);
+
+
     }
 
 

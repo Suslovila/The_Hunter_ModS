@@ -10,10 +10,12 @@ import com.way.suslovila.entity.projectile.explosionArrow.RenderExplosionArrow;
 import com.way.suslovila.entity.projectile.ghostArrow.RenderGhostArrow;
 import com.way.suslovila.entity.projectile.speedArrow.RenderSpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.RenderShadowGrab;
+import com.way.suslovila.entity.shadowMonster.RenderShadowMonster;
 import com.way.suslovila.entity.shadowgardenentity.RenderShadowGarden;
 import com.way.suslovila.event.ModEventBusEventsAll;
 import com.way.suslovila.event.ServerProxy;
 import com.way.suslovila.event.client.ClientProxy;
+import com.way.suslovila.music.ModSounds;
 import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.particles.ParticleHandler;
 import com.way.suslovila.potions.ModPotions;
@@ -114,6 +116,7 @@ public static final double maxShadowParticleRadius = 1.5;
         //loading GeckoLib
         GeckoLib.initialize();
         ModEntityTypes.register(eventBus);
+        ModSounds.register(eventBus);
         ModPotions.register(eventBus);
 
         eventBus.addListener(this::clientSetup);
@@ -166,7 +169,7 @@ public static final double maxShadowParticleRadius = 1.5;
         EntityRenderers.register(ModEntityTypes.SHADOW_GRAB.get(), RenderShadowGrab::new);
         EntityRenderers.register(ModEntityTypes.SHADOW_GARDEN.get(), RenderShadowGarden::new);
         EntityRenderers.register(ModEntityTypes.HUNTER_PUSH.get(), RenderPushAttackHunter::new);
-        EntityRenderers.register(ModEntityTypes.SHADOW_MONSTER.get(), RenderPushAttackHunter::new);
+        EntityRenderers.register(ModEntityTypes.SHADOW_MONSTER.get(), RenderShadowMonster::new);
         EntityRenderers.register(ModEntityTypes.GHOST_ARROW.get(), RenderGhostArrow::new);
 
 
@@ -234,4 +237,5 @@ public static final double maxShadowParticleRadius = 1.5;
         PROXY.initNetwork();
 
     }
+
 }

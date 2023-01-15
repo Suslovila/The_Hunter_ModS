@@ -8,27 +8,24 @@ import com.way.suslovila.bagentity.HunterBagEntityItemsStorage;
 import com.way.suslovila.capability.EntityCapabilityProvider;
 import com.way.suslovila.capability.EntityCapabilityStorage;
 import com.way.suslovila.effects.ModEffects;
-import com.way.suslovila.effects.RainyAura;
+import com.way.suslovila.effects.WaterShieldEffect;
 import com.way.suslovila.effects.rainyaura.RainyAuraCapProvider;
 import com.way.suslovila.effects.rainyaura.RainyAuraStorage;
 import com.way.suslovila.entity.ModEntityTypes;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
-import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
 import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
-import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
-import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.item.RainyAuraTalisman.RainyAuraTalismanItem;
-import com.way.suslovila.particles.ModParticles;
+import com.way.suslovila.music.ModSounds;
 import com.way.suslovila.savedData.*;
+import com.way.suslovila.savedData.clientSynch.MessageIsVictim;
 import com.way.suslovila.savedData.clientSynch.MessageWaterShield;
 import com.way.suslovila.savedData.clientSynch.Messages;
 import com.way.suslovila.simplybackpacks.inventory.BackpackData;
 import com.way.suslovila.simplybackpacks.items.BackpackItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
@@ -40,6 +37,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 
@@ -48,12 +46,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -74,23 +70,35 @@ public class ModEvents {
     @SubscribeEvent
     public static void checkIfEntityIsAVictimEvent(LivingEvent.LivingUpdateEvent event) {
 //            Messages.sendWaterShield(new MessageWaterShield(event.getEntityLiving().hasEffect(ModEffects.WATER_SHIELD.get())), event.getEntityLiving());
+            LivingEntity entity = event.getEntityLiving();
+        if (!entity.level.isClientSide()) {
+            if(entity.tickCount % 5 ==0 )
+            Messages.sendWaterShield(new MessageWaterShield(entity.hasEffect(ModEffects.WATER_SHIELD.get()), entity.getId()), entity);
 
-        if (!event.getEntityLiving().level.isClientSide()) {
-//            Messages.sendWaterShield(new MessageWaterShield(event.getEntityLiving().hasEffect(ModEffects.WATER_SHIELD.get())), event.getEntityLiving());
-
-            if (!SaveVictim.get(event.getEntityLiving().level).getVictim().equals("novictim") && !(SaveVictim.get(event.getEntityLiving().level).getVictim() == null)) {
-                if (event.getEntityLiving().getUUID().equals(UUID.fromString(SaveVictim.get(event.getEntityLiving().level).getVictim()))) {
-                    event.getEntityLiving().addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 2000, 3));
-                    if (event.getEntityLiving() instanceof Player && ((Player) event.getEntityLiving()).getSleepTimer() == 99) {
+            if (!SaveVictim.get(entity.level).getVictim().equals("novictim") && (SaveVictim.get(entity.level).getVictim() != null) && ((ServerLevel)entity.level).getEntity(UUID.fromString(SaveVictim.get(entity.level).getVictim())) != null){
+                Messages.sendWaterShield(new MessageIsVictim(entity.getUUID().equals(UUID.fromString(SaveVictim.get(entity.level).getVictim())), entity.getId()), entity);
+                if (entity.getUUID().equals(UUID.fromString(SaveVictim.get(entity.level).getVictim()))) {
+                    entity.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 2000, 3));
+                    if (entity instanceof Player && ((Player) event.getEntityLiving()).getSleepTimer() == 99) {
 //                    ((ServerPlayer)event.getEntityLiving()).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.GUARDIAN_ELDER_EFFECT, this.isSilent() ? 0.0F : 1.0F));
-
                     }
                 }
             }
+
         }
-        if (event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof Player && event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).isPresent()) {
-            System.out.println(event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).map(EntityCapabilityStorage::getHasWaterShield).get());
+        else {
+//            if (Minecraft.getInstance().getMusicManager().isPlayingMusic(ModSounds.HUNT_THEME_MUSIC.get()) && (event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).isPresent() && !event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).map(EntityCapabilityStorage::getIsVictim).get()))
+//                Minecraft.getInstance().getMusicManager().stopPlaying();
+//            else {
+//                if (random.nextInt(400) == 300 && !Minecraft.getInstance().getMusicManager().isPlayingMusic(ModSounds.HUNT_THEME_MUSIC.get()) && (event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).isPresent() && event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).map(EntityCapabilityStorage::getIsVictim).get())) {
+//                    Minecraft.getInstance().getMusicManager().stopPlaying();
+//                    Minecraft.getInstance().getMusicManager().startPlaying(ModSounds.HUNT_THEME_MUSIC.get());
+//                }
+//            }
         }
+//        if (entity.level.isClientSide() && event.getEntityLiving() instanceof Player && event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).isPresent()) {
+//            System.out.println(event.getEntityLiving().getCapability(EntityCapabilityProvider.BLOCKS).map(EntityCapabilityStorage::getHasWaterShield).get());
+//        }
     }
 //@SubscribeEvent
 //public static void mouse(InputEvent.RawMouseEvent event){
@@ -142,7 +150,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void ifPlayerAttacksHunter(AttackEntityEvent event) {
-        if (!event.getTarget().level.isClientSide() && event.getTarget() instanceof Zombie) {
+        if (!event.getTarget().level.isClientSide() && event.getTarget() instanceof Shulker) {
             SaveVictim.get(event.getPlayer().level).changeVictim("novictim");
         }
     }
@@ -200,9 +208,12 @@ public class ModEvents {
         if(isLiving){
             hasEffect = ((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get());
         }
-        if (event.getEntity() instanceof LivingEntity && !event.getEntity().level.isClientSide()) {
-            Messages.sendWaterShield(new MessageWaterShield(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), event.getEntity().getId()), (LivingEntity) event.getEntity());
-        }
+       // if (event.getEntity() instanceof LivingEntity && !event.getEntity().level.isClientSide()) {
+//            hasEffect = ((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get());
+//            Messages.sendWaterShield(new MessageWaterShield(hasEffect, event.getEntity().getId()), (LivingEntity) event.getEntity());
+//            System.out.println("Entity ID: " + event.getEntity().getId());
+//
+//        }
 //        if (event.getEntity() instanceof LivingEntity)
 //            System.out.println(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()));
     }
@@ -214,9 +225,9 @@ public class ModEvents {
             }
             HunterAmountData.get(level).setPreviousHunter(event.getEntity().getUUID());
 
-            if (HuntersHP.get(level).getHunterHP() > 0) {
-                ((HunterEntity)event.getEntity()).setHealth((float)HuntersHP.get(level).getHunterHP());
-            }
+//            if (HuntersHP.get(level).getHunterHP() > 0) {
+//                ((HunterEntity)event.getEntity()).setHealth((float)HuntersHP.get(level).getHunterHP());
+//            }
             //HunterEntity.possibleActions.put("vulnarable", (hunter)-> {((HunterEntity)hunter).setVulnarable(false);});
         }
     }
@@ -230,7 +241,7 @@ public class ModEvents {
     @SubscribeEvent
     public static void IfHunterBagSpawnsEvent(EntityJoinWorldEvent event) {
         if(!event.getEntity().level.isClientSide() && event.getEntity() instanceof LivingEntity)
-            Messages.sendWaterShield(new MessageWaterShield(((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), ((LivingEntity)event.getEntity()).getId()), ((LivingEntity)event.getEntity()));
+            //Messages.sendWaterShield(new MessageWaterShield(((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), ((LivingEntity)event.getEntity()).getId()), ((LivingEntity)event.getEntity()));
 
         if (!event.getEntity().level.isClientSide()) {
             if (event.getEntity() instanceof HunterBagEntity) {
@@ -437,62 +448,38 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void Hunt(TickEvent.WorldTickEvent event) {
-//        SaveVictim saveVictim =SaveVictim.get(event.world);
-//        saveVictim.tick(event.world);
         if (!event.world.isClientSide()) {
-//            System.out.println(HuntersHP.get(event.world).getHunterHP());
-//            SaveVictim.get(event.world).tick(event.world);
             if (SaveVictim.get(event.world).getVictim() == null) {
                 SaveVictim.get(event.world).changeVictim("novictim");
             }
-        }
-        if (!event.world.isClientSide() && event.phase == TickEvent.Phase.START && event.world.dimension() == Level.OVERWORLD) {
-            if (HuntTime.get(event.world).getHuntTime() <= 0) {
-                SaveVictim.get(event.world).changeVictim("novictim");
-            } else {
-                HuntTime.get(event.world).reduceTime();
+            if (event.phase == TickEvent.Phase.START) {
                 Level level = event.world;
-                if (!SaveVictim.get(event.world).getVictim().equals("novictim") && SaveVictim.get(event.world).getVictim() != null) {
-                    int chance = 0;
-                    if (HunterAmountData.get(level).getPreviousHunter() == null || ((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) == null || (!(((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) == null) && !((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()).isAlive()))
-                        chance = 200;
-                    else
-                        chance = 300;
-                    if (event.world.random.nextInt(chance) == 100) {
-                        Player victim = event.world.getPlayerByUUID(UUID.fromString(SaveVictim.get(event.world).getVictim()));
-                        if (victim != null) {
-                            if (event.world.random.nextInt(6) == 7) {
-//                                BlockPos checkpos;
-//                                int maxDistance = 20;
-//                                boolean flag = true;
-//                                for (int x = victim.getBlockX() + maxDistance; x < victim.getBlockX() + maxDistance && flag; x++) {
-//                                    for (int y = victim.getBlockY() - 2; y < victim.getBlockY() + 2 && flag; y++) {
-//                                        for (int z = victim.getBlockZ() - maxDistance; z < victim.getBlockZ() + maxDistance && flag; z++) {
-//                                            if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 8) {
-//                                                checkpos = new BlockPos(x, y, z);
-//                                                //trying to find walls
-////                                                        if (!victim.level.getBlockState(checkpos).isAir() && victim.level.getBlockState(checkpos).)
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                                PushAttackHunter pushAttackHunter = new PushAttackHunter(ModEntityTypes.HUNTER_PUSH.get(), victim.level);
-                            } else {
-                                //Entity entity = ((ServerLevel) event.world).getEntity(HunterAmountData.get(event.world).getPreviousHunter());
-//                                if (!(HunterAmountData.get(level).getPreviousHunter() == null) && ((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) != null && (!(((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) == null) && ((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()).isAlive()))
-//                                    ((HunterEntity) entity).disappearInShadows();
+                    if (HuntTime.get(level).getHuntTime() <= 0 && !SaveVictim.get(level).getVictim().equals("novictim"))
+                        SaveVictim.get(level).changeVictim("novictim");
 
-                                DelayBeforeSpawningHunter.get(event.world).changeTime(HunterTeleportFormEntity.lifeTime + HunterAppearanceFormEntity.lifeTime + 5);
+                    if (!SaveVictim.get(level).getVictim().equals("novictim")){
+                    if (level.dimension() == Level.OVERWORLD) {
+                        HuntTime.get(event.world).reduceTime();
+                    }
+                    if (((ServerLevel) level).getEntity(UUID.fromString(SaveVictim.get(level).getVictim())) != null) {
+                        int chance = 0;
+                        if (HunterAmountData.get(level).getPreviousHunter() == null || ((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) == null || (((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()) != null && !((ServerLevel) level).getEntity(HunterAmountData.get(level).getPreviousHunter()).isAlive()))
+                            chance = 100;
+                        else
+                            chance = 3000;
+                        if (event.world.random.nextInt(chance) == 50)
+                            DelayBeforeSpawningHunter.get(level).changeTime(HunterTeleportFormEntity.lifeTime + HunterAppearanceFormEntity.lifeTime + 5);
 
-                            }
+                        if (DelayBeforeSpawningHunter.get(level).getHunterDelay() > 0)
+                            DelayBeforeSpawningHunter.get(level).changeTime(-1);
+
+                        if (DelayBeforeSpawningHunter.get(level).getHunterDelay() == 0) {
+                            ModEvents.summonHunter(level);
+                            DelayBeforeSpawningHunter.get(level).changeTime(-1);
+
+
+                            System.out.println(DelayBeforeSpawningHunter.get(level.getServer().overworld()).getHunterDelay());
                         }
-                    }
-                    if (DelayBeforeSpawningHunter.get(event.world).getHunterDelay() == 0) {
-                        ModEvents.summonHunter(event.world);
-                        DelayBeforeSpawningHunter.get(event.world).changeTime(-1);
-                    }
-                    if (DelayBeforeSpawningHunter.get(event.world).getHunterDelay() > 0) {
-                        DelayBeforeSpawningHunter.get(event.world).changeTime(-1);
                     }
                 }
             }
@@ -541,7 +528,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void clearRainyAuraCAPA(PotionEvent.PotionRemoveEvent event) {
-        if (event.getPotion() instanceof RainyAura) {
+        if (event.getPotion() instanceof WaterShieldEffect) {
             event.getEntityLiving().getCapability(RainyAuraCapProvider.BLOCKS).ifPresent(RainyAuraStorage::clearAll);
             System.out.println("Clearing CAPA");
         }
@@ -569,55 +556,60 @@ private static void summonHunter(Level level) {
     if (victim != null) {
         int maxDistanceXZ = 30;
         int maxDistanceY = 15;
-        ArrayList<BlockPos> list = new ArrayList<BlockPos>();
+        ArrayList<BlockPos> speedArrowList = new ArrayList<BlockPos>();
+        ArrayList<BlockPos> explArrowList = new ArrayList<BlockPos>();
+        ArrayList<BlockPos> shadowLightningList = new ArrayList<BlockPos>();
         for (int x = victim.getBlockX() - maxDistanceXZ; (x < victim.getBlockX() + maxDistanceXZ); x++) {
             for (int z = victim.getBlockZ() - maxDistanceXZ; (z < victim.getBlockZ() + maxDistanceXZ); z++) {
                 for (int y = victim.getBlockY() - maxDistanceY; (y < victim.getBlockY() + maxDistanceY); y++) {
-                    if (Math.sqrt(victim.distanceToSqr(x, y, z)) > 20) {
+                    if (!level.hasNearbyAlivePlayer(x, y, z, 23)) {
                         BlockPos checkPos = new BlockPos(x, y, z);
-//                        BlockPos up1block = new BlockPos(x, y + 1, z);
-//                        BlockPos up2block = new BlockPos(x, y + 2, z);
-//                        BlockPos up3block = new BlockPos(x, y + 3, z);
                         BlockPos down1block = new BlockPos(x, y - 1, z);
-                        //Vec3 vec3 = new Vec3(victim.getX(), victim.getEyeY(), victim.getZ());
-                        //Vec3 vec31 = new Vec3(checkPos.getX(), checkPos.getY(), checkPos.getZ());
-                        float brightness = level.hasChunkAt(victim.getBlockX(), victim.getBlockZ()) ? level.getBrightness(new BlockPos(victim.getX(), victim.getEyeY(), victim.getZ())) : 0.0F;
+                        float brightness = level.hasChunkAt(checkPos.getX(), checkPos.getZ()) ? level.getBrightness(new BlockPos(checkPos.getX(), checkPos.getY(), checkPos.getZ())) : 0.0F;
                         boolean bool = level.clip(new ClipContext(new Vec3(victim.getX(), victim.getEyeY(), victim.getZ()), new Vec3(checkPos.getX(), checkPos.getY(), checkPos.getZ()), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, victim)).getType() == HitResult.Type.MISS;
-                        if (level.getBlockState(down1block).getMaterial().blocksMotion() && bool && !level.getBlockState(down1block).isAir() && level.getBlockState(checkPos).isAir() && level.getBlockState(new BlockPos(x, y + 1, z)).isAir() && level.getBlockState(new BlockPos(x, y + 2, z)).isAir() && level.getBlockState(new BlockPos(x, y + 3, z)).isAir() && brightness <= HunterEntity.maxLight) {
-                            //  flag = false;
-                            //!level.getBlockState(checkPos).getCollisionShape(level, checkPos).isEmpty()
-                            list.add(checkPos);
-//                            HunterAppearanceFormEntity appearanceForm = new HunterAppearanceFormEntity(ModEntityTypes.HUNTER_APPEAR_FORM.get(), level);
-//                            appearanceForm.moveTo(checkPos.getX(), checkPos.getY(), checkPos.getZ(), 0, 0);
-//                            level.addFreshEntity(appearanceForm);
+                        if (level.getBlockState(down1block).getMaterial().blocksMotion() && !level.getBlockState(down1block).isAir() && level.getBlockState(checkPos).isAir() && level.getBlockState(new BlockPos(x, y + 1, z)).isAir() && level.getBlockState(new BlockPos(x, y + 2, z)).isAir() && level.getBlockState(new BlockPos(x, y + 3, z)).isAir() && brightness <= HunterEntity.maxLight) {
+                            if (bool)
+                                speedArrowList.add(checkPos);
+                            else if (!HunterEntity.checkConditionForExplosionArrow(level, new BlockPos(checkPos.getX(), checkPos.getY() + 2, checkPos.getZ()), victim.eyeBlockPosition()))
+                                explArrowList.add(checkPos);
+                            else
+                                shadowLightningList.add(checkPos);
+
                         }
                     }
                 }
             }
         }
-        HunterAppearanceFormEntity appearanceForm = new HunterAppearanceFormEntity(ModEntityTypes.HUNTER_APPEAR_FORM.get(), level);
-        if (!list.isEmpty()) {
-            Vec3 viewVector = victim.getLookAngle();
-            BlockPos finalPos;
-            double maxAngle = 0;
-            BlockPos bestBlockPos = null;
-            for (int i = 0; i < list.size(); i++) {
-                BlockPos pos = list.get(i);
-                double angle = angleBetweenVec3(viewVector, victim.position().subtract(new Vec3(pos.getX(), pos.getY(), pos.getZ())).reverse());
-                if (angle > maxAngle) {
-                    bestBlockPos = pos;
-                    maxAngle = angle;
+        ArrayList<ArrayList<BlockPos>> iterList = new ArrayList<>();
+        iterList.add(speedArrowList);
+        iterList.add(explArrowList);
+        iterList.add(shadowLightningList);
+        for (int k = 0; k < iterList.size(); k++) {
+            ArrayList<BlockPos> iterableList = iterList.get(k);
+            if (!iterableList.isEmpty()) {
+                Vec3 viewVector = victim.getLookAngle();
+                BlockPos finalPos;
+                double maxAngle = 0;
+                double floor = random.nextDouble(Math.PI/2+0.3, Math.PI);
+                BlockPos bestBlockPos = null;
+                for (int i = 0; i < iterableList.size(); i++) {
+                    BlockPos pos = iterableList.get(i);
+                    double angle = angleBetweenVec3(viewVector, victim.position().subtract(new Vec3(pos.getX(), pos.getY(), pos.getZ())).reverse());
+                    if (angle > maxAngle && angle < floor) {
+                        bestBlockPos = pos;
+                        maxAngle = angle;
+                    }
                 }
-            }
-            if (maxAngle != 0)
-                finalPos = bestBlockPos;
-             else
-                finalPos = list.get(random.nextInt(list.size()));
+                if (maxAngle != 0)
+                    finalPos = bestBlockPos;
+                else
+                    finalPos = iterableList.get(random.nextInt(iterableList.size()));
 
-
+                HunterAppearanceFormEntity appearanceForm = new HunterAppearanceFormEntity(ModEntityTypes.HUNTER_APPEAR_FORM.get(), level);
                 appearanceForm.moveTo(finalPos.getX() + 0.5, finalPos.getY(), finalPos.getZ() + 0.5, 0, 0);
                 level.addFreshEntity(appearanceForm);
-
+                return;
+            }
         }
     }
 }

@@ -11,16 +11,16 @@ public class ShadowMonsterModel extends AnimatedTickingGeoModel<ShadowMonsterEnt
 
     @Override
     public ResourceLocation getModelLocation(ShadowMonsterEntity object) {
-        return new ResourceLocation(MysticalCreatures.MOD_ID, "geo/shadowgrab.geo.json");
+        return new ResourceLocation(MysticalCreatures.MOD_ID, "geo/shadowmonster.geo.json");
     }
     @Override
     public ResourceLocation getTextureLocation(ShadowMonsterEntity object) {
-        return new ResourceLocation(MysticalCreatures.MOD_ID, "textures/entity/shadowgrab.png");
+        return new ResourceLocation(MysticalCreatures.MOD_ID, "textures/entity/shadowmonster.png");
     }
 //I do not care about animations, shadowGrap has no animation, but to prevent errors:
     @Override
     public ResourceLocation getAnimationFileLocation(ShadowMonsterEntity animatable) {
-        return new ResourceLocation(MysticalCreatures.MOD_ID, "animations/shadowgrab.animation.json");
+        return new ResourceLocation(MysticalCreatures.MOD_ID, "animations/shadowmonster.animation.json");
     }
     @Override
     public void setLivingAnimations(ShadowMonsterEntity entity, Integer uniqueID, @Nullable AnimationEvent customPredicate) {

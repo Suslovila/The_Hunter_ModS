@@ -32,21 +32,21 @@ public class ExplosionArrowModel extends AnimatedGeoModel<ExplosionArrow> {
         //System.out.println("We have got the bone");
         //System.out.println(ClientVictimData.getVictim());
         //System.out.println(ClientVictimDataBoolean.getIsVictim());
-        if (arrow.getXCoordToAim() != 0) {
-//            System.out.println("Not null");
-            // Player player = entity.level.getPlayerByUUID(ClientVictimData.getVictim());
-//            System.out.println("Victim exists");
-            // i = (i + 0.1f)%360;
-            // entity.rotate60degrees(bone, i);
-            double dx = arrow.getXCoordToAim() - arrow.getX();
-            double dz = arrow.getZCoordToAim() - arrow.getZ();
-            double xz = Math.sqrt(dx * dx + dz * dz);
-            double dy = arrow.getYCoordToAim() - arrow.getY();
-
-            arrow.setYRot(90f + Mth.wrapDegrees(-(float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI))));
-//            bone.setRotationY(Mth.wrapDegrees((float) (Math.atan2(dx, dz))));
-//            bone.setRotationX(Mth.wrapDegrees((float) (Math.atan2(dy, xz))));
-            arrow.setXCoordToAim(0);
-        }
+//        if (arrow.getXCoordToAim() != 0) {
+////            System.out.println("Not null");
+//            // Player player = entity.level.getPlayerByUUID(ClientVictimData.getVictim());
+////            System.out.println("Victim exists");
+//            // i = (i + 0.1f)%360;
+//            // entity.rotate60degrees(bone, i);
+//            double dx = arrow.getXCoordToAim() - arrow.getX();
+//            double dz = arrow.getZCoordToAim() - arrow.getZ();
+//            double xz = Math.sqrt(dx * dx + dz * dz);
+//            double dy = arrow.getYCoordToAim() - arrow.getY();
+//
+//            arrow.setYRot(90f + Mth.wrapDegrees(-(float)(Mth.atan2(dz, dx) * (double)(180F / (float)Math.PI))));
+////            bone.setRotationY(Mth.wrapDegrees((float) (Math.atan2(dx, dz))));
+////            bone.setRotationX(Mth.wrapDegrees((float) (Math.atan2(dy, xz))));
+//            arrow.setXCoordToAim(0);
+//        }
     }
 }
