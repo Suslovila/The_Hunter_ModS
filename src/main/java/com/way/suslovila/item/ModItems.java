@@ -33,6 +33,8 @@ public class ModItems {
 
     public static final RegistryObject<Item> RAINY_TALISMAN = ITEMS.register("rainy_talisman",
             () -> new RainyAuraTalismanItem(new Item.Properties().tab(CreativeModeTab.TAB_MISC).stacksTo(1)));
+    public static final RegistryObject<Item> STRANGE_BONE_ITEM = ITEMS.register("strange_bone",
+            () -> new StrangeBoneItem(new Item.Properties().tab(CreativeModeTab.TAB_MISC).stacksTo(64)));
 
     public static final RegistryObject<Item> HUNTER_SPAWN_EGG = ITEMS.register("hunter_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntityTypes.HUNTER,0x948e8d, 0x3b3635,

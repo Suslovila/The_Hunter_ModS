@@ -14,6 +14,7 @@ import com.way.suslovila.entity.shadowMonster.RenderShadowMonster;
 import com.way.suslovila.entity.shadowgardenentity.RenderShadowGarden;
 import com.way.suslovila.event.ModEventBusEventsAll;
 import com.way.suslovila.event.ServerProxy;
+import com.way.suslovila.event.SideProxy;
 import com.way.suslovila.event.client.ClientProxy;
 import com.way.suslovila.music.ModSounds;
 import com.way.suslovila.particles.ModParticles;
@@ -55,6 +56,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -106,6 +108,10 @@ public static final double maxShadowParticleRadius = 1.5;
 
 
     public MysticalCreatures() {
+        DistExecutor.safeRunForDist(
+                () -> SideProxy.Client::new,
+                () -> SideProxy.Server::new
+        );
         setup();
         // Register the setup method for modloading
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -117,7 +123,8 @@ public static final double maxShadowParticleRadius = 1.5;
         GeckoLib.initialize();
         ModEntityTypes.register(eventBus);
         ModSounds.register(eventBus);
-        ModPotions.register(eventBus);
+        //ModEffects.register(eventBus);
+        //ModPotions.register(eventBus);
 
         eventBus.addListener(this::clientSetup);
         ModItems.register(eventBus);
@@ -127,7 +134,6 @@ public static final double maxShadowParticleRadius = 1.5;
         ITEMS.register(bus);
         CONTAINERS.register(bus);
         RECIPES.register(bus);
-        ModEffects.register(bus);
         ModParticles.register(eventBus);
         ParticleHandler.register(eventBus);
         PROXY = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
@@ -233,9 +239,9 @@ public static final double maxShadowParticleRadius = 1.5;
 
         }
     public void init(final FMLCommonSetupEvent event) {
-
+        //event.enqueueWork(ModPotions::addPotionRecipes);
+       // ModPotions.addPotionRecipes();
         PROXY.initNetwork();
 
     }
-
 }

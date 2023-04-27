@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.way.suslovila.MysticalCreatures;
 
+import com.way.suslovila.effects.LayerWaterShieldGeo;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -17,6 +18,7 @@ public class RenderTrapEntity extends GeoEntityRenderer<TrapEntity> {
         super(renderManager, new TrapEntityModel());
         this.shadowRadius = 0.01f;
         this.addLayer(new LayerGlowingAreasGeo<TrapEntity>(this, modelProvider::getTextureLocation, modelProvider::getModelLocation, RenderType::eyes));
+        this.addLayer(new LayerWaterShieldGeo<>(this, modelProvider::getTextureLocation, modelProvider::getModelLocation, RenderType::eyes));
     }
 
     @Override

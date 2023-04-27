@@ -28,8 +28,12 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -47,6 +51,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -72,17 +78,36 @@ public class ModEvents {
 //            Messages.sendWaterShield(new MessageWaterShield(event.getEntityLiving().hasEffect(ModEffects.WATER_SHIELD.get())), event.getEntityLiving());
             LivingEntity entity = event.getEntityLiving();
         if (!entity.level.isClientSide()) {
+            if(entity.hasEffect(ModEffects.WATER_SHIELD.get())){
+              ModEvents.extinguishAll(entity.getBoundingBox(), entity);
+              ModEvents.extinguishUnder(entity.getBoundingBox(), entity);
+//                AABB entityAABB1 = entity.getBoundingBox();
+//                AABB aabb = new AABB(entityAABB1.minX, entityAABB1.minY -1, entityAABB1.minZ, entityAABB1.maxX, entityAABB1.minY, entityAABB1.maxZ);
+//                BlockPos posUnderEntity = new BlockPos(entity.getBlockX(), entity.getBlockY()-1, entity.getBlockZ());
+//                if(entity.level.getBlockState(posUnderEntity).getMaterial() == Material.LAVA){
+//                    entity.level.setBlockAndUpdate(posUnderEntity, Blocks.OBSIDIAN.defaultBlockState());
+//                    entity.level.playSound(null, posUnderEntity.getX(), posUnderEntity.getY(), posUnderEntity.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+//                    for(int i = 0; i< 20; i++) {
+//                        ((ServerLevel) entity.level).sendParticles(ParticleTypes.LARGE_SMOKE, posUnderEntity.getX(), posUnderEntity.getY()+1, posUnderEntity.getZ(), 1,  random.nextDouble(-0.2, 0.2), random.nextDouble(0, 0.2), random.nextDouble(-0.2, 0.2), random.nextDouble(-0.2, 0.2));
+//                    }
+                //}
+                if(entity.isOnFire())
+                entity.clearFire();
+                //AABB entityAABB = entity.getBoundingBox();
+                //entity.getBbWidth();
+                // ((ServerLevel)entity.level).sendParticles(ParticleTypes.FALLING_WATER, entity.getX() + random.nextDouble(entityAABB.minX, entityAABB.maxX), entity.getY() + random.nextDouble(entityAABB.minY, entityAABB.maxY),  entity.getZ() + random.nextDouble(entityAABB.minZ, entityAABB.maxZ), 1, 0, 0, 0, 0);
+            }
             if(entity.tickCount % 5 ==0 )
             Messages.sendWaterShield(new MessageWaterShield(entity.hasEffect(ModEffects.WATER_SHIELD.get()), entity.getId()), entity);
 
             if (!SaveVictim.get(entity.level).getVictim().equals("novictim") && (SaveVictim.get(entity.level).getVictim() != null) && ((ServerLevel)entity.level).getEntity(UUID.fromString(SaveVictim.get(entity.level).getVictim())) != null){
                 Messages.sendWaterShield(new MessageIsVictim(entity.getUUID().equals(UUID.fromString(SaveVictim.get(entity.level).getVictim())), entity.getId()), entity);
-                if (entity.getUUID().equals(UUID.fromString(SaveVictim.get(entity.level).getVictim()))) {
-                    entity.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 2000, 3));
-                    if (entity instanceof Player && ((Player) event.getEntityLiving()).getSleepTimer() == 99) {
-//                    ((ServerPlayer)event.getEntityLiving()).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.GUARDIAN_ELDER_EFFECT, this.isSilent() ? 0.0F : 1.0F));
-                    }
-                }
+//                if (entity.getUUID().equals(UUID.fromString(SaveVictim.get(entity.level).getVictim()))) {
+//                    entity.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 2000, 3));
+//                    if (entity instanceof Player && ((Player) event.getEntityLiving()).getSleepTimer() == 99) {
+////                    ((ServerPlayer)event.getEntityLiving()).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.GUARDIAN_ELDER_EFFECT, this.isSilent() ? 0.0F : 1.0F));
+//                    }
+//                }
             }
 
         }
@@ -154,17 +179,18 @@ public class ModEvents {
             SaveVictim.get(event.getPlayer().level).changeVictim("novictim");
         }
     }
-//    @SubscribeEvent
-//    public static void ifHunterIsAttackedWhenNotVulnarable(LivingHurtEvent event){
-//        if(!event.getEntityLiving().level.isClientSide()){
-//            if(event.getEntityLiving() instanceof HunterEntity){
-//                if(!(((HunterEntity)event.getEntityLiving()).getVulnarble())){
-//                    System.out.println("Event Running:" + event.getEntityLiving().getHealth());
-//                    ((HunterEntity)event.getEntityLiving()).disappearInShadows();
-//                }
-//            }
-//        }
-//    }
+    @SubscribeEvent
+    public static void ifHunterIsAttackedWhenNotVulnarable(LivingHurtEvent event){
+        if(!event.getEntityLiving().level.isClientSide() && event.getEntityLiving().hasEffect(ModEffects.WATER_SHIELD.get())){
+            DamageSource source = event.getSource();
+            if(source.isFire())
+                event.setAmount(0);
+            else{
+             if (!source.isBypassInvul() && !source.isMagic() && !source.isBypassArmor())
+              event.setAmount((float) (event.getAmount() - event.getAmount() * 0.15 * (source.isProjectile() ? 2: 1) * (event.getEntityLiving().getEffect(ModEffects.WATER_SHIELD.get()).getAmplifier() + 1)));
+           }
+       }
+    }
 
     /* @SubscribeEvent
      public static void playerKilledByHunter(LivingDeathEvent event) {
@@ -202,21 +228,6 @@ public class ModEvents {
  */
     @SubscribeEvent
     public static void IfHunterSpawnsEvent(EntityJoinWorldEvent event) {
-        if (event.getEntity() instanceof Player){
-        boolean isLiving = event.getEntity() instanceof LivingEntity;
-        boolean hasEffect = false;
-        if(isLiving){
-            hasEffect = ((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get());
-        }
-       // if (event.getEntity() instanceof LivingEntity && !event.getEntity().level.isClientSide()) {
-//            hasEffect = ((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get());
-//            Messages.sendWaterShield(new MessageWaterShield(hasEffect, event.getEntity().getId()), (LivingEntity) event.getEntity());
-//            System.out.println("Entity ID: " + event.getEntity().getId());
-//
-//        }
-//        if (event.getEntity() instanceof LivingEntity)
-//            System.out.println(((LivingEntity) event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()));
-    }
         if (event.getEntity() instanceof HunterEntity && !event.getEntity().level.isClientSide()) {
             ServerLevel level = (ServerLevel)event.getEntity().level;
             HunterAmountData data = HunterAmountData.get(level);
@@ -258,10 +269,26 @@ public class ModEvents {
                 BackpackData data = BackpackItem.getData(finalItemStack);
                 UUID uuid = data.getUuid();
                 System.out.println(uuid);
-
-
+                ArrayList<ItemStack> itemsToPutInBag = new ArrayList<>();
+                int size = 18;
+                //this.stacks = NonNullList.withSize(size, ItemStack.EMPTY);
+                Random random = new Random();
+                for (int i = 0; i < size; i++) {
+                    List<ItemStack> itemsInBag = HunterBagData.get(bagEntity.level).getItemsInBag();
+                    int sizeOfBag = itemsInBag.size();
+                    if (sizeOfBag != 0) {
+                        int number = random.nextInt(3);
+                        if (number == 2) {
+                            int index = random.nextInt(sizeOfBag);
+                            ItemStack currentItem = itemsInBag.get(index);
+                            //this.stacks.set(i, item);
+                            itemsToPutInBag.add(currentItem);
+                            HunterBagData.get(bagEntity.level).removeItemFromBag(itemsInBag.get(index));
+                        }
+                    }
+                }
                 bagEntity.getCapability(BagProvider.BAG).ifPresent(items -> {
-                    items.setBag(finalItemStack);
+                    items.setBag(itemsToPutInBag);
                 });
             }
         }
@@ -567,7 +594,7 @@ private static void summonHunter(Level level) {
                         BlockPos down1block = new BlockPos(x, y - 1, z);
                         float brightness = level.hasChunkAt(checkPos.getX(), checkPos.getZ()) ? level.getBrightness(new BlockPos(checkPos.getX(), checkPos.getY(), checkPos.getZ())) : 0.0F;
                         boolean bool = level.clip(new ClipContext(new Vec3(victim.getX(), victim.getEyeY(), victim.getZ()), new Vec3(checkPos.getX(), checkPos.getY(), checkPos.getZ()), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, victim)).getType() == HitResult.Type.MISS;
-                        if (level.getBlockState(down1block).getMaterial().blocksMotion() && !level.getBlockState(down1block).isAir() && level.getBlockState(checkPos).isAir() && level.getBlockState(new BlockPos(x, y + 1, z)).isAir() && level.getBlockState(new BlockPos(x, y + 2, z)).isAir() && level.getBlockState(new BlockPos(x, y + 3, z)).isAir() && brightness <= HunterEntity.maxLight) {
+                        if (((PreviousHunterPosition.get(level).getPreviousHunterPos() != null && Math.sqrt(PreviousHunterPosition.get(level).getPreviousHunterPos().distToCenterSqr(checkPos.getX(), checkPos.getY(), checkPos.getZ())) > 13) || PreviousHunterPosition.get(level).getPreviousHunterPos() == null) && level.getBlockState(down1block).getMaterial().blocksMotion() && !level.getBlockState(down1block).isAir() && level.getBlockState(checkPos).isAir() && level.getBlockState(new BlockPos(x, y + 1, z)).isAir() && level.getBlockState(new BlockPos(x, y + 2, z)).isAir() && level.getBlockState(new BlockPos(x, y + 3, z)).isAir() && brightness <= HunterEntity.maxLight) {
                             if (bool)
                                 speedArrowList.add(checkPos);
                             else if (!HunterEntity.checkConditionForExplosionArrow(level, new BlockPos(checkPos.getX(), checkPos.getY() + 2, checkPos.getZ()), victim.eyeBlockPosition()))
@@ -608,6 +635,8 @@ private static void summonHunter(Level level) {
                 HunterAppearanceFormEntity appearanceForm = new HunterAppearanceFormEntity(ModEntityTypes.HUNTER_APPEAR_FORM.get(), level);
                 appearanceForm.moveTo(finalPos.getX() + 0.5, finalPos.getY(), finalPos.getZ() + 0.5, 0, 0);
                 level.addFreshEntity(appearanceForm);
+                PreviousHunterPosition.get(level).setPreviousHunterPos(finalPos);
+
                 return;
             }
         }
@@ -616,7 +645,65 @@ private static void summonHunter(Level level) {
 public static double angleBetweenVec3(Vec3 vec1, Vec3 vec2){
     return Math.acos(vec1.dot(vec2)/vec1.length()/vec2.length());
 }
+    private static void extinguishAll(AABB pArea, LivingEntity entity) {
+        int i = Mth.floor(pArea.minX);
+        int j = Mth.floor(pArea.minY);
+        int k = Mth.floor(pArea.minZ);
+        int l = Mth.floor(pArea.maxX);
+        int i1 = Mth.floor(pArea.maxY);
+        int j1 = Mth.floor(pArea.maxZ);
+        for(int rt = 0; rt < 2; rt++)
+        ((ServerLevel)entity.level).sendParticles(ParticleTypes.FALLING_WATER, entity.getX() + random.nextDouble(-entity.getBbWidth()/2, entity.getBbWidth()/2), entity.getY() + random.nextDouble(0, entity.getBbHeight()/2),  entity.getZ() + random.nextDouble(-entity.getBbWidth()/2, entity.getBbWidth()/2), 1, 0, 0, 0, 0);
+        for(int k1 = i; k1 <= l; ++k1) {
+            for(int l1 = j; l1 <= i1; ++l1) {
+                for(int i2 = k; i2  <= j1; ++i2) {
+                    BlockPos blockpos = new BlockPos(k1, l1, i2);
+                    BlockState blockstate = entity.level.getBlockState(blockpos);
+                    if (!blockstate.isAir()){
+                        if(blockstate.getMaterial() == Material.LAVA){
+                            entity.level.setBlockAndUpdate(blockpos, Blocks.AIR.defaultBlockState());
+                            entity.level.playSound(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+                        }
+                        if(blockstate.getMaterial() == Material.FIRE){
+                            entity.level.setBlockAndUpdate(blockpos, Blocks.AIR.defaultBlockState());
+                            entity.level.playSound(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
+    private static void extinguishUnder(AABB pArea, LivingEntity entity) {
+        double delta = 0D;
+        int i = Mth.floor(pArea.minX- delta);
+        int j = Mth.floor(pArea.minY) - 1;
+        int k = Mth.floor(pArea.minZ- delta);
+        int l = Mth.floor(pArea.maxX+delta);
+        int i1 = Mth.floor(pArea.minY);
+        int j1 = Mth.floor(pArea.maxZ+delta);
+        for(int k1 = i; k1 <= l; ++k1) {
+            for(int l1 = j; l1 <= i1; ++l1) {
+                for(int i2 = k; i2 <= j1; ++i2) {
+                    BlockPos blockpos = new BlockPos(k1, l1, i2);
+                    BlockState blockstate = entity.level.getBlockState(blockpos);
+                    if (!blockstate.isAir()){
+                        if(blockstate.getMaterial() == Material.LAVA){
+                            entity.level.setBlockAndUpdate(blockpos, Blocks.OBSIDIAN.defaultBlockState());
+                            entity.level.playSound(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+                            for(int p = 0; p< 20; p++) {
+                                ((ServerLevel) entity.level).sendParticles(ParticleTypes.LARGE_SMOKE, blockpos.getX(), blockpos.getY()+1, blockpos.getZ(), 1,  random.nextDouble(-0.2, 0.2), random.nextDouble(0, 0.2), random.nextDouble(-0.2, 0.2), random.nextDouble(-0.2, 0.2));
+                            }
+                        }
+                        if(blockstate.getMaterial() == Material.FIRE){
+                            entity.level.setBlockAndUpdate(blockpos, Blocks.AIR.defaultBlockState());
+                            entity.level.playSound(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 

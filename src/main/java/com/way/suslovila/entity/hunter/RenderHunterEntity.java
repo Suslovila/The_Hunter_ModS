@@ -3,6 +3,7 @@ package com.way.suslovila.entity.hunter;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.way.suslovila.MysticalCreatures;
+import com.way.suslovila.item.RainyAuraTalisman.WaterShieldLayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
@@ -27,6 +28,8 @@ public class RenderHunterEntity extends GeoEntityRenderer<HunterEntity> {
         this.shadowRadius = 1.5f;
 
   this.addLayer(new LayerGlowingAreasGeo<HunterEntity>(this, modelProvider::getTextureLocation, modelProvider::getModelLocation, RenderType::eyes));
+
+
     }
 
     @Override

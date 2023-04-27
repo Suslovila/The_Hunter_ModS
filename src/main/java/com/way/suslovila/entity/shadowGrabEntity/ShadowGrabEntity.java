@@ -20,6 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -38,7 +39,6 @@ import static com.way.suslovila.entity.hunter.HunterEntity.maxLight;
 
 
 public class ShadowGrabEntity extends ShadowCreature implements IAnimatable, IAnimationTickable {
-    //todo: сделать так, заставить игрока не разворачиваться
     @Nullable
     private UUID ownerUUID;
     private int tickTimer = 0;
@@ -168,6 +168,8 @@ public class ShadowGrabEntity extends ShadowCreature implements IAnimatable, IAn
         if (!level.isClientSide()) {
             if (deathTime > 18)
                 discard();
+            if(getIsReadyToCatch() == prepareTime-1)
+                super.refreshDimensions();
             System.out.println("IS ready to catch: " + getIsReadyToCatch());
 
             if (getIsReadyToCatch() > prepareTime && !hasCaughtPlayer()) kill();
@@ -176,7 +178,7 @@ public class ShadowGrabEntity extends ShadowCreature implements IAnimatable, IAn
             }
             else
                 kill();
-            if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSource.DRY_OUT, 1);
+            //if (this.getBrightness() > maxLight && tickCount % 20 == 0) this.hurt(DamageSource.DRY_OUT, 1);
 
             String owner = getEntityData().get(OWNER);
 
@@ -184,7 +186,7 @@ public class ShadowGrabEntity extends ShadowCreature implements IAnimatable, IAn
             else {
                 if ((((ServerLevel) level).getEntity(UUID.fromString(owner))) == null) kill();
                 else {
-                    if (!(((ServerLevel) level).getEntity(UUID.fromString(owner))).isAlive() || ((HunterEntity) (((ServerLevel) level).getEntity(UUID.fromString(owner)))).isGrabbing())
+                    if (!(((ServerLevel) level).getEntity(UUID.fromString(owner))).isAlive() || !((HunterEntity) (((ServerLevel) level).getEntity(UUID.fromString(owner)))).isGrabbing())
                         kill();
 
                     else {
@@ -382,5 +384,11 @@ public class ShadowGrabEntity extends ShadowCreature implements IAnimatable, IAn
             return false;
         else
             return super.hurt(pSource, pAmount);
+    }
+    public PushReaction getPistonPushReaction() {
+        return PushReaction.IGNORE;
+    }
+    public EntityDimensions getDimensions(Pose pPose) {
+        return getIsReadyToCatch() >= prepareTime-1 ? EntityDimensions.scalable(0, 0) : super.getDimensions(pPose).scale(this.getScale());
     }
 }

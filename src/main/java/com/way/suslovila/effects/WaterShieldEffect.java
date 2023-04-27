@@ -37,6 +37,9 @@ public class WaterShieldEffect extends MobEffect {
     public void applyEffectTick(LivingEntity pLivingEntity, int pAmplifier) {
         super.applyEffectTick(pLivingEntity, pAmplifier);
         if (pLivingEntity.isOnFire()) pLivingEntity.clearFire();
+        //pLivingEntity.setRemainingFireTicks(0);
+
+
 
 
         if (pLivingEntity.hasEffect(ModEffects.HELLISH_FLAMES.get()))
@@ -58,15 +61,15 @@ public class WaterShieldEffect extends MobEffect {
             pLivingEntity.level.addParticle(ParticleTypes.UNDERWATER, pLivingEntity.getX() + xDelta, pLivingEntity.getY() + yDelta, pLivingEntity.getZ() + zDelta, 0, 0, 0);
         }
         else{
-            extinguishAll(pLivingEntity.getBoundingBox(), pLivingEntity);
-            BlockPos posUnderEntity = new BlockPos(pLivingEntity.getBlockX(), pLivingEntity.getBlockY()-1, pLivingEntity.getBlockZ());
-            if(pLivingEntity.level.getBlockState(posUnderEntity).getMaterial() == Material.LAVA){
-                pLivingEntity.level.setBlockAndUpdate(posUnderEntity, Blocks.OBSIDIAN.defaultBlockState());
-                pLivingEntity.level.playSound(null, posUnderEntity.getX(), posUnderEntity.getY(), posUnderEntity.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
-                for(int i = 0; i< 20; i++) {
-                    ((ServerLevel) pLivingEntity.level).sendParticles(ParticleTypes.LARGE_SMOKE, posUnderEntity.getX(), posUnderEntity.getY()+1, posUnderEntity.getZ(), 1,  random.nextDouble(-0.2, 0.2), random.nextDouble(0, 0.2), random.nextDouble(-0.2, 0.2), random.nextDouble(-0.2, 0.2));
-                }
-            }
+//            extinguishAll(pLivingEntity.getBoundingBox(), pLivingEntity);
+//            BlockPos posUnderEntity = new BlockPos(pLivingEntity.getBlockX(), pLivingEntity.getBlockY()-1, pLivingEntity.getBlockZ());
+//            if(pLivingEntity.level.getBlockState(posUnderEntity).getMaterial() == Material.LAVA){
+//                pLivingEntity.level.setBlockAndUpdate(posUnderEntity, Blocks.OBSIDIAN.defaultBlockState());
+//                pLivingEntity.level.playSound(null, posUnderEntity.getX(), posUnderEntity.getY(), posUnderEntity.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.AMBIENT, 0.2F, 1.0F);
+//                for(int i = 0; i< 20; i++) {
+//                    ((ServerLevel) pLivingEntity.level).sendParticles(ParticleTypes.LARGE_SMOKE, posUnderEntity.getX(), posUnderEntity.getY()+1, posUnderEntity.getZ(), 1,  random.nextDouble(-0.2, 0.2), random.nextDouble(0, 0.2), random.nextDouble(-0.2, 0.2), random.nextDouble(-0.2, 0.2));
+//                }
+//            }
         }
     }
 

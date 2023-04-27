@@ -27,6 +27,7 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class HunterBagEntity extends Entity implements IAnimatable {
@@ -89,9 +90,10 @@ public class HunterBagEntity extends Entity implements IAnimatable {
 //                    ItemStack itemStack = item.getDefaultInstance();
 //                    ItemStack copyOf = itemStack;
 //                    itemStack = putItemsToBackpack(copyOf, this.level);
-                    ItemStack bagToSpawn = this.getCapability(BagProvider.BAG).map(HunterBagEntityItemsStorage::getBag).get();
+                    ArrayList<ItemStack> bagToSpawn = this.getCapability(BagProvider.BAG).map(HunterBagEntityItemsStorage::getBag).get();
 //                    System.out.println(bagToSpawn);
-                    this.spawnAtLocation(bagToSpawn);
+                    for(int i = 0; i < bagToSpawn.size(); i++)
+                    this.spawnAtLocation(bagToSpawn.get(i));
 
 
                 }
@@ -120,10 +122,6 @@ public class HunterBagEntity extends Entity implements IAnimatable {
     public void tick() {
         this.baseTick();
         if(!level.isClientSide()) {
-            ItemStack finalItemStack =  (this.getCapability(BagProvider.BAG).map(HunterBagEntityItemsStorage::getBag).get());
-            BackpackData data = BackpackItem.getData(finalItemStack);
-            UUID uuid = data.getUuid();
-            System.out.println(uuid);
         }
     }
 }

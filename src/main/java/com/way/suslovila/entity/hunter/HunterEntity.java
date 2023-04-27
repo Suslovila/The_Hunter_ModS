@@ -31,6 +31,7 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -121,7 +122,6 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
         String task = getEntityData().get(ACTUAL_TASK);
             event.getController().setAnimationSpeed(animationSpeedMap.get(task));
             event.getController().setAnimation(new AnimationBuilder().addAnimation("hunter.animation."+task));
-       // System.out.println("In predicate: " + getEntityData().get(ACTUAL_TASK));
             return PlayState.CONTINUE;
     }
     @Override
@@ -144,9 +144,6 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
         super.baseTick();
         if (!level.isClientSide()) {
             System.out.println(getActualTask());
-//            System.out.println("Timer for PFS: " +getEntityData().get(TIMER_FOR_PREPARING));
-//            System.out.println("Timer for S1: " + getEntityData().get(SHOOTPHASE1));
-            //Hunter's HP is connected with special storing variable in SavedData for whole world:
             HuntersHP.get(this.level).changeHP(this.getHealth());
             //if there is no victim in world:
             if (SaveVictim.get(this.level).getVictim().equals("novictim") || (DelayBeforeSpawningHunter.get(level).getHunterDelay() - HunterTeleportFormEntity.lifeTime - 5 <= 0 && DelayBeforeSpawningHunter.get(level).getHunterDelay() > -1)) {
@@ -171,9 +168,10 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                     EntityAnchorArgument.Anchor pAnchor = EntityAnchorArgument.Anchor.FEET;
                                     Vec3 pTarget = player.getEyePosition();
                                     Vec3 vec3 = pAnchor.apply(this);
+                                    if(!getActualTask().equals("shadowMonster") && !getActualTask().equals("summonShadows")) {
                                         this.setYBodyRot((float) (-Math.toDegrees(((float) (Math.atan2(pTarget.x - vec3.x, pTarget.z - vec3.z))))));
                                         this.getLookControl().setLookAt(player);
-
+                                    }
                                     setXCoordToAim((float) player.getEyePosition().x);
                                     setYCoordToAim((float) player.getEyePosition().y);
                                     setZCoordToAim((float) player.getEyePosition().z);
@@ -183,8 +181,8 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                     //}
                                     if (random.nextBoolean() && getEntityData().get(SHOOTPHASE4) == 10 && player.getEyePosition().distanceTo(new Vec3(getXCoordToAim(), getYCoordToAim(), getZCoordToAim())) < 0.05 && player.getBrightness() <= maxLight) {
                                         boolean flag = false;
-                                        for (int u = -1; u < 2; u++) {
-                                            for (int y = -1; y < 2; y++) {
+                                        for (int u = -1; u < 2 && !flag; u++) {
+                                            for (int y = -1; y < 2 && !flag; y++) {
                                                 if (level.getBlockState(new BlockPos(player.getBlockX() + u, player.getBlockY() - 1, player.getBlockZ() + y)).getMaterial().blocksMotion())
                                                     flag = true;
                                             }
@@ -405,10 +403,6 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                 if (getActualTask().equals("shadowMonster") && getEntityData().get(TIMER_FOR_SHADOW_MONSTER) >= ShadowMonsterEntity.lifeTime)
                     setActualTask("controlShadows");
 
-
-//                if (getActualTask().equals("falling") && getEntityData().get(TIMER_FOR_FALLING) == 24)
-//                    setActualTask("vulnarable");
-
                 System.out.println("Task at the end: " + getActualTask());
                 //should we rotate Hunter's hands?
                 if (getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) < 8)
@@ -439,7 +433,6 @@ public boolean hurt(DamageSource pSource, float pAmount) {
             if (pSource.isMagic()) {
                 return false;
             } else {
-                if (!isGrabbing()) {
                     int number = random.nextInt(3);
                     if (number == 2 || number == 1) {
                         return super.hurt(pSource, pAmount * 0.1f);
@@ -449,10 +442,7 @@ public boolean hurt(DamageSource pSource, float pAmount) {
                         DelayBeforeSpawningHunter.get(level.getServer().overworld()).changeTime(HunterTeleportFormEntity.lifeTime + 5);
                         return false;
                     }
-                } else {
                     return super.hurt(pSource, pAmount);
-                }
-                return super.hurt(pSource, pAmount);
             }
         }
     return super.hurt(pSource, pAmount);
@@ -595,6 +585,10 @@ getEntityData().define(ACTUAL_TASK, "prepareForShoot");
         }
         return isBadCondition;
     }
+    public PushReaction getPistonPushReaction() {
+        return PushReaction.IGNORE;
+    }
+
 }
 
 

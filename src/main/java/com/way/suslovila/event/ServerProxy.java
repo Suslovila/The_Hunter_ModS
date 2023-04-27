@@ -2,6 +2,7 @@ package com.way.suslovila.event;
 
 
 import com.way.suslovila.MysticalCreatures;
+import com.way.suslovila.potions.ModPotions;
 import com.way.suslovila.savedData.clientSynch.MessageIsVictim;
 import com.way.suslovila.savedData.clientSynch.MessageWaterShield;
 import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
@@ -18,8 +19,10 @@ import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
@@ -64,7 +67,6 @@ public class ServerProxy {
                 .consumer(consumer)
                 .add();
     }
-
 
 
 }
