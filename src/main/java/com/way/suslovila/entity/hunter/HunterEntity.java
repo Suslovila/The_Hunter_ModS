@@ -7,19 +7,25 @@ import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
 import com.way.suslovila.entity.shadowMonster.ShadowMonsterEntity;
+import com.way.suslovila.music.ModSounds;
 import com.way.suslovila.particles.TailBlackParticles;
 import com.way.suslovila.savedData.DelayBeforeSpawningHunter;
 import com.way.suslovila.savedData.HuntersHP;
 import com.way.suslovila.savedData.SaveVictim;
+import com.way.suslovila.savedData.clientSynch.ClientVictimData;
 import com.way.suslovila.savedData.clientSynch.Messages;
 import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
+import com.way.suslovila.sounds.MCSounds;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -50,12 +56,12 @@ import java.util.*;
 
 
 public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimationTickable {
-    //todo: запретить двигать камерой; сделать хотя бы какую-то анимацию во время контроля теней
+
     //max light amount Hunter can stand:
         public static final float maxLight = 0.26f;
         public static final int minDistanceToPlayer = 6;
         public static final int maxDistanceToVictim = 40;
-        //variables for storing time of any Hunter's action
+        //variables for storing time for Hunter's actions
    private HashMap<Vec3, ArrayList<Object>> cordsForShadowsHunter = new HashMap<>();
     private static final EntityDataAccessor<String> UUIDOFGRABENTITY = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Boolean> SHOULDROTATEHANDSFORSHOOTING = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.BOOLEAN);
@@ -75,7 +81,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
 
 
     //binding timers to their names
-   private final static HashMap<String, EntityDataAccessor<Integer>> actionsMap  = new HashMap<String, EntityDataAccessor<Integer>>() {{
+   private final static HashMap<String, EntityDataAccessor<Integer>> actionsMap  = new HashMap<>() {{
         put("prepareForShoot", TIMER_FOR_PREPARING);
         put("shootPhase1", SHOOTPHASE1);
         put("shootPhase2", SHOOTPHASE2);
@@ -149,11 +155,6 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
             if (SaveVictim.get(this.level).getVictim().equals("novictim") || (DelayBeforeSpawningHunter.get(level).getHunterDelay() - HunterTeleportFormEntity.lifeTime - 5 <= 0 && DelayBeforeSpawningHunter.get(level).getHunterDelay() > -1)) {
                 this.disappearInShadows();
             } else {
-                //if it is too bright for Hunter:
-//                if (this.getBrightness() > maxLight) {
-//                    if (!getActualTask().equals("vulnarable")) setActualTask("falling");
-//                }
-                //else {
                     //Is victim here?
                     boolean isVictimHere = false;
                     List<Entity> entities = level.getEntities(this, new AABB(this.getX() - maxDistanceToVictim, this.getY() - maxDistanceToVictim, this.getZ() - maxDistanceToVictim, this.getX() + maxDistanceToVictim, this.getY() + maxDistanceToVictim, this.getZ() + maxDistanceToVictim), EntitySelector.LIVING_ENTITY_STILL_ALIVE);
@@ -162,8 +163,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                             ServerPlayer player = (ServerPlayer) entities.get(i);
                                 if (UUID.fromString(SaveVictim.get(this.level).getVictim()).equals(player.getUUID())) {
                                     isVictimHere = true;
-                                    //rotation stuff if Hunter is not vulnarable:
-                                    //if (!isVulnarable()) {
+                                    //rotation stuff:
                                     Messages.sendToHunter(new PacketSyncVictimToClient(player.getUUID()), this);
                                     EntityAnchorArgument.Anchor pAnchor = EntityAnchorArgument.Anchor.FEET;
                                     Vec3 pTarget = player.getEyePosition();
@@ -172,13 +172,11 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                         this.setYBodyRot((float) (-Math.toDegrees(((float) (Math.atan2(pTarget.x - vec3.x, pTarget.z - vec3.z))))));
                                         this.getLookControl().setLookAt(player);
                                     }
+                                    //giving some info for client handling for arrows and so on
                                     setXCoordToAim((float) player.getEyePosition().x);
                                     setYCoordToAim((float) player.getEyePosition().y);
                                     setZCoordToAim((float) player.getEyePosition().z);
-                                    System.out.print(getXCoordToAim() + " ");
-                                    System.out.print(getYCoordToAim() + " ");
-                                    System.out.println(getZCoordToAim());
-                                    //}
+                                    //choosing what will Hunter do
                                     if (random.nextBoolean() && getEntityData().get(SHOOTPHASE4) == 10 && player.getEyePosition().distanceTo(new Vec3(getXCoordToAim(), getYCoordToAim(), getZCoordToAim())) < 0.05 && player.getBrightness() <= maxLight) {
                                         boolean flag = false;
                                         for (int u = -1; u < 2 && !flag; u++) {
@@ -187,6 +185,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                                     flag = true;
                                             }
                                         }
+                                        //if player is flying, we want to summon Shadow Monster
                                         if (flag) {
                                             if (random.nextInt(4) == 1) {
                                                 setActualTask("shadowMonster");
@@ -195,6 +194,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                                 shadowMonster.setPos(player.position());
                                                 level.addFreshEntity(shadowMonster);
                                                 setGrabUUID(shadowMonster.getUUID().toString());
+                                                //else, we would prefer hands
                                             } else {
                                                 setActualTask("summonShadows");
                                                 ShadowGrabEntity shadowGrabEntity = new ShadowGrabEntity(ModEntityTypes.SHADOW_GRAB.get(), level);
@@ -222,12 +222,13 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                             }
                                         }
                                     }
+                                    //if hands are dead or smth else happened and there is no alive hands-mob, we change the task
                                     if (Objects.equals(getGrabUUID(), "NoGrabEntity") || ((ServerLevel) level).getEntity(UUID.fromString(getGrabUUID())) == null || ((((ServerLevel) level).getEntity(UUID.fromString(getGrabUUID()))) != null && !(((ServerLevel) level).getEntity(UUID.fromString(getGrabUUID()))).isAlive()) && isGrabbing()) {
                                         if (!isShooting()) setActualTask("prepareForShoot");
                                     }
                                     //if it's time to shoot arrow:
                                     if (getEntityData().get(SHOOTPHASE4) == 3) {
-                                        // Player player = (Player) entities.get(i);
+                                        // calculations for choosing the position to summon arrow
                                         Vec3 vec31 = EntityAnchorArgument.Anchor.FEET.apply(this);
                                         Vec3 Ptarget = player.position();
                                         double dx = Ptarget.x - vec31.x;
@@ -241,37 +242,11 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                         double arrowZpos = vec31.z + xzArmLength * Math.cos(bodyRotAngle);
                                         double arrowYpos = vec31.y + 3.4 + 1.5 * Math.sin((float) (Math.atan2(dy, xz)) * 1.3f);
                                         Vec3 arrowPos = new Vec3(arrowXPos, arrowYpos, arrowZpos);
-                                        //depending on situation Hunter should decide if he need to shoot destroyable arrow:
+
+                                        //depending on situation Hunter should decide if he needs to shoot destroying arrow:
                                         boolean isBadCondition = checkConditionForExplosionArrow(level,new BlockPos(arrowXPos, arrowYpos, arrowZpos), new BlockPos(player.position().x, player.getEyeY(), player.position().z));
 
-                                    //    Iterable<BlockPos> blocksBetween = BlockPos.betweenClosed(new BlockPos(arrowXPos, arrowYpos, arrowZpos), new BlockPos(player.position().x, player.getEyeY(), player.position().z));
-//                                        Iterator<BlockPos> iterator = blocksBetween.iterator();
-//                                        //int countForBlocks = 0;
-//                                        boolean isBadCondition = checkConditionForExplosionArrow(level,new BlockPos(arrowXPos, arrowYpos, arrowZpos), new BlockPos(player.position().x, player.getEyeY(), player.position().z));
-//                                        ArrayList<BlockPos> blocks = new ArrayList<>();
-//                                        while (iterator.hasNext()) {
-//                                            BlockPos block = iterator.next();
-//                                            if (!(this.level.getBlockState(block).isAir())) {
-//                                                if (level.getBlockState(block).getMaterial().blocksMotion()  && !blocks.contains(block) ) {
-//                                                    //countForBlocks++;
-//                                                    blocks.add(block);
-//                                                }
-//                                                if (this.level.getBlockState(block).getBlock().getExplosionResistance() >= Blocks.OBSIDIAN.getExplosionResistance()) {
-//                                                    isBadCondition = true;
-//                                                }
-//                                            }
-//                                        }
-//                                        for (int bl = 0; bl < blocks.size() && !isBadCondition; bl++) {
-//                                            BlockPos pos = blocks.get(bl);
-//                                            Block block1 = level.getBlockState(pos).getBlock();
-//                                            System.out.println("Block is : " + block1);
-//                                            boolean t = level.getBlockState(pos).isAir();
-//                                            if (!level.getBlockState(pos).isAir() && Math.sqrt(player.distanceToSqr(pos.getX(), pos.getY(), pos.getZ())) > 4)
-//                                                isBadCondition = true;
-//                                        }
-//                                        //System.out.println(countForBlocks);
-//                                        System.out.println(blocks);
-                                        //|| BehaviorUtils.canSee(this, player)
+                                        //if Hunter can see his victim
                                         if (level.clip(new ClipContext(player.getEyePosition(), arrowPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)).getType() == HitResult.Type.MISS) {
                                             SpeedArrow arrow = new SpeedArrow(ModEntityTypes.SPEED_ARROW.get(), this.level);
                                             arrow.setPos(arrowXPos, arrowYpos, arrowZpos);
@@ -292,7 +267,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                                 arrow.shoot(player.getX() - arrowXPos, player.getY() + 2.2*destination.length()/maxDistanceToVictim + 1.5F - arrowYpos, player.getZ() - arrowZpos, 3f, 0);
                                                 this.level.addFreshEntity(arrow);
                                             } else {
-
+                                                //todo: decide what to do if there are bad blocks
                                             }
                                         }
                                     }
@@ -300,13 +275,16 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                             //if player is too near to Hunter:
                             if (player.distanceTo(this) < 6 && !isGrabbing()) {
                                 disappearInShadows();
+                                //some delay
                                 DelayBeforeSpawningHunter.get(level.getServer().overworld()).changeTime(HunterTeleportFormEntity.lifeTime + 5);
 
                             }
                         }
                     }
+                    //creating particles around Hunter's hand if he uses shadow hands
                     if (Objects.equals(getActualTask(), "controlShadows")) {
                         double armLength = 0.3D + 1.5;
+                        //some simple vector stuff
                         if (this.cordsForShadowsHunter.size() < 6) {
                             double radius = random.nextDouble(0.15, 0.5);
                             Vec3 lookVectorNormal = this.getViewVector(0);
@@ -352,39 +330,20 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                         DelayBeforeSpawningHunter.get(level).changeTime(HunterTeleportFormEntity.lifeTime);
 
                     }
-//                    if (isVictimHere) {
-//                        //rotation stuff if Hunter is not vulnarable:
-//                        //if (!isVulnarable()) {
-//                            Messages.sendToHunter(new PacketSyncVictimToClient(UUID.fromString(SaveVictim.get(this.level).getVictim())), this);
-////                        MessagesBoolean.sendToHunter(new PacketSyncVictimToClientBoolean(true), this);
-//                            Player player = level.getPlayerByUUID(UUID.fromString(SaveVictim.get(this.level).getVictim()));
-//                            assert player != null;
-//                            EntityAnchorArgument.Anchor pAnchor = EntityAnchorArgument.Anchor.FEET;
-//                            Vec3 pTarget = player.getEyePosition();
-//                            Vec3 vec3 = pAnchor.apply(this);
-////                        double dx = pTarget.x - vec3.x;
-////                        double dz = pTarget.z - vec3.z;
-//                            //double angle = (-Math.toDegrees(((float)(Math.atan2(pTarget.x - vec3.x,pTarget.z - vec3.z)))));
-//                            this.setYBodyRot((float) (-Math.toDegrees(((float) (Math.atan2(pTarget.x - vec3.x, pTarget.z - vec3.z))))));
-//                            this.getLookControl().setLookAt(player);
-//                            setXCoordToAim((float) player.getEyePosition().x);
-//                            setYCoordToAim((float) player.getEyePosition().y);
-//                            setZCoordToAim((float) player.getEyePosition().z);
-//                        //}
-//                    }
-                //}
+
                 System.out.println("Task before check: " + getActualTask());
-                //now we need to add time for current action and set to 0 all other timers
+
+                //now we need to add time for current action and set to 0 all other timers, this is how Hunter task system works(yeap, instead of "Goals" system. I created bicycle
+
                 HashMap<String, EntityDataAccessor<Integer>> map = (HashMap<String, EntityDataAccessor<Integer>>) actionsMap.clone();
                 Iterator<String> iteratorForActions = map.keySet().iterator();
                 while (iteratorForActions.hasNext()) {
                     String action = iteratorForActions.next();
-                    String s = getActualTask();
                     if (Objects.equals(action, getActualTask()))
                         getEntityData().set(actionsMap.get(action), getEntityData().get(actionsMap.get(action)) + 1);
                     else getEntityData().set(actionsMap.get(action), 0);
                 }
-                //when are supposed to end, some actions should start other particular ones
+                //when some task ends, it must trigger another task to start, it is fully individual for each task
                 if (getActualTask().equals("prepareForShoot") && getEntityData().get(TIMER_FOR_PREPARING) == 5)
                     setActualTask("shootPhase1");
                 if (getActualTask().equals("shootPhase1") && getEntityData().get(SHOOTPHASE1) == 7)
@@ -404,21 +363,21 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                     setActualTask("controlShadows");
 
                 System.out.println("Task at the end: " + getActualTask());
-                //should we rotate Hunter's hands?
-                if (getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) < 8)
-                    setShouldRotateHandsForShooting(true);
-                 else
-                    setShouldRotateHandsForShooting(false);
+                //should we rotate Hunter's hands? (For example, while shooting)
+                setShouldRotateHandsForShooting(getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) < 8);
 
+            }
+        }
+        else{
+            if (getActualTask().equals("shadowMonster") && getEntityData().get(TIMER_FOR_SHADOW_MONSTER) == 2){
+                level.playSound(Minecraft.getInstance().player, this.getX(), this.getY(), this.getZ(), MCSounds.beastUnknownLanguage.get(), SoundSource.VOICE, 0.2f, 1.0f);
             }
         }
     }
 
 
 
-//public boolean isVulnarable(){
-//        return getActualTask().equals("vulnarable") || getActualTask().equals("falling");
-//}
+
 private boolean isShooting(){
         return  getActualTask().equals("shootPhase1") || getActualTask().equals("shootPhase2")||getActualTask().equals("shootPhase3")||getActualTask().equals("shootPhase4");
 }
@@ -561,6 +520,7 @@ getEntityData().define(ACTUAL_TASK, "prepareForShoot");
         }
 
     }
+    //bad condition is a situation when there are too solid blocks on the arrow's way.
     public static boolean checkConditionForExplosionArrow(Level level,BlockPos posFrom, BlockPos posTo){
         Iterable<BlockPos> blocksBetween = BlockPos.betweenClosed(posFrom, posTo);
         Iterator<BlockPos> iterator = blocksBetween.iterator();
@@ -588,7 +548,9 @@ getEntityData().define(ACTUAL_TASK, "prepareForShoot");
     public PushReaction getPistonPushReaction() {
         return PushReaction.IGNORE;
     }
-
+public static boolean doesHunterHaveVictimClient(Level level){
+        return (ClientVictimData.getVictim() != null) && (level.getPlayerByUUID(ClientVictimData.getVictim()) != null);
+}
 }
 
 

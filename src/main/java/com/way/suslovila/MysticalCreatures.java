@@ -38,6 +38,7 @@ import com.way.suslovila.simplybackpacks.items.BackpackItem;
 import com.way.suslovila.simplybackpacks.util.BackpackUtils;
 import com.way.suslovila.simplybackpacks.util.RecipeUnlocker;
 import com.way.suslovila.simplybackpacks.util.TagLookup;
+import com.way.suslovila.sounds.MCSounds;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.core.Registry;
@@ -100,6 +101,7 @@ public static final double maxShadowParticleRadius = 1.5;
     private static final DeferredRegister<RecipeSerializer<?>> RECIPES = DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, MysticalCreatures.MOD_ID);
 
     public static final RegistryObject<MenuType<SBContainer>> SBCONTAINER = CONTAINERS.register("sb_container", () -> IForgeMenuType.create(SBContainer::fromNetwork));
+    public static final RegistryObject<MenuType<SBContainer>> MY_ITEM_CONTAINER = CONTAINERS.register("my_item_container", () -> IForgeMenuType.create(SBContainer::fromNetwork));
     public static final RegistryObject<MenuType<FilterContainer>> FILTERCONTAINER = CONTAINERS.register("filter_container", () -> IForgeMenuType.create(FilterContainer::fromNetwork));
 
     public static final RegistryObject<Item> COMMONBACKPACK = ITEMS.register("commonbackpack", () -> new BackpackItem("commonbackpack", Backpack.COMMON));
@@ -125,6 +127,7 @@ public static final double maxShadowParticleRadius = 1.5;
         ModSounds.register(eventBus);
         //ModEffects.register(eventBus);
         //ModPotions.register(eventBus);
+        MCSounds.REG.register(eventBus);
 
         eventBus.addListener(this::clientSetup);
         ModItems.register(eventBus);

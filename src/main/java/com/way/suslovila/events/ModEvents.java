@@ -19,11 +19,13 @@ import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.item.RainyAuraTalisman.RainyAuraTalismanItem;
 import com.way.suslovila.music.ModSounds;
 import com.way.suslovila.savedData.*;
+import com.way.suslovila.savedData.clientSynch.ClientVictimData;
 import com.way.suslovila.savedData.clientSynch.MessageIsVictim;
 import com.way.suslovila.savedData.clientSynch.MessageWaterShield;
 import com.way.suslovila.savedData.clientSynch.Messages;
 import com.way.suslovila.simplybackpacks.inventory.BackpackData;
 import com.way.suslovila.simplybackpacks.items.BackpackItem;
+import com.way.suslovila.sounds.HuntThemePlayer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -62,6 +64,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.*;
 import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -75,6 +78,15 @@ import static net.minecraft.world.entity.Entity.RemovalReason.DISCARDED;
 public class ModEvents {
     @SubscribeEvent
     public static void checkIfEntityIsAVictimEvent(LivingEvent.LivingUpdateEvent event) {
+        if (event.getEntityLiving().level.isClientSide() && event.getEntityLiving() instanceof Player) {
+            if ((ClientVictimData.getVictim() != null) && event.getEntityLiving().level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
+                if (Objects.equals(event.getEntityLiving().level.getPlayerByUUID(ClientVictimData.getVictim()), Minecraft.getInstance().player))
+                    HuntThemePlayer.playBossMusic();
+            }else if (random.nextInt(0, 5) == 4)
+                    HuntThemePlayer.stopBossMusic();
+                }
+
+
 //            Messages.sendWaterShield(new MessageWaterShield(event.getEntityLiving().hasEffect(ModEffects.WATER_SHIELD.get())), event.getEntityLiving());
             LivingEntity entity = event.getEntityLiving();
         if (!entity.level.isClientSide()) {
@@ -475,6 +487,8 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void Hunt(TickEvent.WorldTickEvent event) {
+        //handling hunt theme music
+
         if (!event.world.isClientSide()) {
             if (SaveVictim.get(event.world).getVictim() == null) {
                 SaveVictim.get(event.world).changeVictim("novictim");
@@ -482,6 +496,7 @@ public class ModEvents {
             if (event.phase == TickEvent.Phase.START) {
                 Level level = event.world;
                     if (HuntTime.get(level).getHuntTime() <= 0 && !SaveVictim.get(level).getVictim().equals("novictim"))
+
                         SaveVictim.get(level).changeVictim("novictim");
 
                     if (!SaveVictim.get(level).getVictim().equals("novictim")){

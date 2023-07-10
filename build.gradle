@@ -160,7 +160,7 @@ dependencies {
     // that the dep is a ForgeGradle 'patcher' dependency, and its patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.18.2-40.1.73'
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    //annotationProcessor 'org.spongepowere  d:mixin:0.8.5:processor'
 
 
 }
@@ -208,6 +208,6 @@ dependencies{
 
 
 dependencies {
-    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
+    //compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
 }
 

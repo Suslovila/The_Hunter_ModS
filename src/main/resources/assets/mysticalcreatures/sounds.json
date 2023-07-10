@@ -1,11 +1,17 @@
 {
   "hunt_theme": {
-    "subtitle": "sounds.mysticalcreatures.hunt_theme",
+    "category": "music",
     "sounds": [
       {
         "name": "mysticalcreatures:hunt_theme",
-        "stream": true
+        "stream": true,
+        "volume": 1
       }
-    ]
+    ],
+    "subtitle": "sounds.mysticalcreatures.hunt_theme"
+  },
+  "beast_unknown_language": {
+    "sounds": [ "beast_unknown_language" ],
+    "subtitle": "subtitles.beast_unknown_language"
   }
 }
