@@ -1,3 +1,7 @@
+This mod adds Hunter - primordial Evil that will try to kill player wherever he is
+mod passport (Russian only) - https://docs.google.com/document/d/1PO0C3bV2qVaqHCHp9RKN1yYJJeF-uqH2UMgjyzUEE7o/
+
+
 
 Source installation information for modders
 -------------------------------------------
