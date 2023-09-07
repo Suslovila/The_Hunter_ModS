@@ -1,11 +1,9 @@
-package com.way.suslovila.entity.shadowMonster;
+package com.way.suslovila.entity.EntityShadowMonster;
 
 import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.entity.ShadowCreature;
 import com.way.suslovila.entity.hunter.HunterEntity;
-import com.way.suslovila.particles.ModParticles;
 import com.way.suslovila.particles.TailBlackParticles;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -16,16 +14,8 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.IAnimationTickable;
@@ -38,8 +28,6 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 import javax.annotation.Nullable;
 import java.util.*;
-
-import static com.way.suslovila.entity.hunter.HunterEntity.maxLight;
 
 
 public class ShadowMonsterEntity extends ShadowCreature implements IAnimatable, IAnimationTickable {
@@ -178,16 +166,6 @@ public class ShadowMonsterEntity extends ShadowCreature implements IAnimatable, 
             } else {
                 getLookControl().setLookAt(((ServerLevel) level).getEntity(UUID.fromString(owner)));
                 if (getEntityData().get(ISREADYTOCATCH)-10 == attackTime) {
-                    BlockPos pos = blockPosition();
-                    for (int x = pos.getX() - 7; x < pos.getX() + 7; x++) {
-                        for (int y = pos.getY(); y < pos.getY() + 10; y++) {
-                            for (int z = pos.getZ() - 7; z < pos.getZ() + 7; z++) {
-                                BlockPos checkPos = new BlockPos(x, y, z);
-                                //Vec3 vec = new Vec3(checkPos.getX() - getX(), checkPos.getY() - getY(), checkPos.getZ() - getZ());
-                                level.destroyBlock(checkPos, false, this);
-                            }
-                        }
-                    }
                     List<Entity> entities = level.getEntities(this, this.getBoundingBox());
                     for(int i = 0; i < entities.size(); i++){
                         Entity entity = entities.get(i);

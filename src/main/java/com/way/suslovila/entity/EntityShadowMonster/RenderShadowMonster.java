@@ -1,9 +1,8 @@
-package com.way.suslovila.entity.shadowMonster;
+package com.way.suslovila.entity.EntityShadowMonster;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.way.suslovila.MysticalCreatures;
-import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;

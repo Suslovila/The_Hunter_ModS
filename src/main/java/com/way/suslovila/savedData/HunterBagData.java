@@ -1,7 +1,6 @@
 package com.way.suslovila.savedData;
 
-import com.way.suslovila.simplybackpacks.inventory.BackpackData;
-import com.way.suslovila.simplybackpacks.items.BackpackItem;
+
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

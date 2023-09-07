@@ -5,7 +5,7 @@ import com.way.suslovila.entity.ModEntityTypes;
 
 import com.way.suslovila.item.RainyAuraTalisman.RainyAuraTalismanItem;
 import com.way.suslovila.item.bag.ContainerHunterBag;
-import com.way.suslovila.item.bag.HunterBag;
+import com.way.suslovila.item.bag.ItemHunterBag;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -29,7 +29,7 @@ public class ModItems {
     public static final MenuType<ContainerHunterBag> HUNTER_BAG_CONTAINER = createMenuType(ContainerHunterBag::fromNetwork);
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, MysticalCreatures.MOD_ID);
-    public static final RegistryObject<HunterBag> HUNTER_BAG = ITEMS.register("hunter_bag", ()-> new HunterBag(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<ItemHunterBag> HUNTER_BAG = ITEMS.register("hunter_bag", ()-> new ItemHunterBag(new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> RAINY_TALISMAN = ITEMS.register("rainy_talisman",
             () -> new RainyAuraTalismanItem(new Item.Properties().tab(CreativeModeTab.TAB_MISC).stacksTo(1)));

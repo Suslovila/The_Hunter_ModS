@@ -1,10 +1,6 @@
 package com.way.suslovila.entity;
 
-import com.way.suslovila.entity.shadowMonster.ShadowMonsterEntity;
 import com.way.suslovila.particles.TailBlackParticles;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;

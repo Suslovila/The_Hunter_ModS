@@ -2,7 +2,7 @@ package com.way.suslovila.entity;
 
 import com.way.suslovila.MysticalCreatures;
 
-import com.way.suslovila.bagentity.HunterBagEntity;
+import com.way.suslovila.entity.bag.HunterBagEntity;
 import com.way.suslovila.entity.hunter.HunterEntity;
 import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.hunter.pushAttack.PushAttackHunter;
@@ -11,7 +11,7 @@ import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.ghostArrow.GhostArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
-import com.way.suslovila.entity.shadowMonster.ShadowMonsterEntity;
+import com.way.suslovila.entity.EntityShadowMonster.ShadowMonsterEntity;
 import com.way.suslovila.entity.shadowgardenentity.ShadowGardenEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import net.minecraft.resources.ResourceLocation;

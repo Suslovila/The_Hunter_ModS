@@ -2,7 +2,6 @@ package com.way.suslovila.item.bag;
 
 import com.way.suslovila.item.ModItems;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,42 +19,42 @@ public class ContainerHunterBag extends AbstractContainerMenu {
     }
 
     private final ItemStack bag;
-    public final Container hunterbagInv;
+    public final SimpleContainer hunterbagInv;
+
 
     public ContainerHunterBag(int windowId, Inventory playerInv, ItemStack bag) {
         super(ModItems.HUNTER_BAG_CONTAINER, windowId);
 
         this.bag = bag;
         if (!playerInv.player.level.isClientSide) {
-            hunterbagInv = HunterBag.getInventory(bag);
+            hunterbagInv = ItemHunterBag.getInventory(bag);
         } else {
-            hunterbagInv = new SimpleContainer(HunterBag.HunterBagSIZE);
+            hunterbagInv = new SimpleContainer(ItemHunterBag.HunterBagSIZE);
         }
 
         //bag's slots
-        for(int k = 0; k < 3; ++k) {
+        for(int k = 0; k < 2; ++k) {
             for(int l = 0; l < 9; ++l) {
-                this.addSlot(new Slot(playerInv, l + k * 9, 8 + l * 18, 18 + k * 18));
+                this.addSlot(new BagSlot(hunterbagInv, l + k * 9, 8 + l * 18, 18 + k * 18));
             }
         }
 
-        //player's inventory slos
+        //player's inventory slots
 
         for(int i1 = 0; i1 < 3; ++i1) {
             for(int k1 = 0; k1 < 9; ++k1) {
-                this.addSlot(new Slot(playerInv, k1 + i1 * 9 + 9, 8 + k1 * 18, 84 + i1 * 18));
+                this.addSlot(new Slot(playerInv, k1 + i1 * 9 + 9, 8 + k1 * 18, 68 + i1 * 18));
             }
         }
         //hotbar slots:
         for (int i = 0; i < 9; ++i) {
             if (playerInv.getItem(i) == bag) {
-                addSlot(new SlotLocked(playerInv, i, 8 + i * 18, 142));
+                addSlot(new SlotLocked(playerInv, i, 8 + i * 18, 126));
             } else {
-                addSlot(new Slot(playerInv, i, 8 + i * 18, 142));
+                addSlot(new Slot(playerInv, i, 8 + i * 18, 126));
             }
         }
     }
-
 
 
     @Override

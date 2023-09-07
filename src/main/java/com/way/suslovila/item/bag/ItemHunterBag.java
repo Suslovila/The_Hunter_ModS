@@ -1,8 +1,8 @@
 package com.way.suslovila.item.bag;
 
+import com.way.suslovila.savedData.HunterBagData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,13 +24,15 @@ import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-public class HunterBag extends Item {
+public class ItemHunterBag extends Item {
     public static final int HunterBagSIZE = 27;
 
-    public HunterBag(Properties props) {
+    public ItemHunterBag(Properties props) {
         super(props);
     }
 
@@ -51,7 +53,20 @@ public class HunterBag extends Item {
             }
         };
     }
-
+    public static void putItemsInBackpackFromHunterStorage(ItemStack stack, Level level) {
+        int size = 18;
+        Random random = new Random();
+        for (int i = 0; i < size; i++) {
+            List<ItemStack> itemsInBag = HunterBagData.get(level).getItemsInBag();
+            int sizeOfBag = itemsInBag.size();
+            if (sizeOfBag != 0 && random.nextInt(3) == 2) {
+                    int index = random.nextInt(sizeOfBag);
+                    ItemStack item = itemsInBag.get(index);
+                    getInventory(stack).setItem(i, item);
+                    HunterBagData.get(level).removeItemFromBag(itemsInBag.get(index));
+            }
+        }
+    }
 
     @Nonnull
     @Override
@@ -119,7 +134,7 @@ public class HunterBag extends Item {
             @Nonnull ItemStack bag, @Nonnull Slot slot,
             @Nonnull ClickAction clickAction, @Nonnull Player player) {
         return InventoryHelper.overrideStackedOnOther(
-                HunterBag::getInventory,
+                ItemHunterBag::getInventory,
                 player.containerMenu instanceof ContainerHunterBag,
                 bag, slot, clickAction, player);
     }
@@ -130,15 +145,16 @@ public class HunterBag extends Item {
             @Nonnull Slot slot, @Nonnull ClickAction clickAction,
             @Nonnull Player player, @Nonnull SlotAccess cursorAccess) {
         return InventoryHelper.overrideOtherStackedOnMe(
-                HunterBag::getInventory,
+                ItemHunterBag::getInventory,
                 player.containerMenu instanceof ContainerHunterBag,
                 bag, toInsert, clickAction, cursorAccess);
     }
 
     public static void openMenu(ServerPlayer player, MenuProvider menu, Consumer<FriendlyByteBuf> writeInitialData) {
         NetworkHooks.openGui(player, menu, writeInitialData);
-
-
     }
-
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged)
+    {
+        return false;
+    }
 }

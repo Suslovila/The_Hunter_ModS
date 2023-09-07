@@ -2,7 +2,6 @@ package com.way.suslovila;
 
 
 import com.way.suslovila.item.ModItems;
-import com.way.suslovila.item.bag.HunterBag;
 import com.way.suslovila.item.bag.HunterBagScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;

@@ -35,11 +35,7 @@ public class HunterModel extends AnimatedTickingGeoModel<HunterEntity> {
     @Override
     public void setLivingAnimations(HunterEntity entity, Integer uniqueID, @Nullable AnimationEvent customPredicate) {
         super.setLivingAnimations(entity, uniqueID, customPredicate);
-        //System.out.println("Calling SuperMethod!!!");
-        //IBone bone = this.getAnimationProcessor().getBone("hunter_teleport_form");
-        //System.out.println("We have got the bone");
-        //System.out.println(ClientVictimData.getVictim());
-        //System.out.println(ClientVictimDataBoolean.getIsVictim());
+
         if ((ClientVictimData.getVictim() != null) && entity.level.getPlayerByUUID(ClientVictimData.getVictim()) != null) {
 //            System.out.println("Not null");
                 // Player player = entity.level.getPlayerByUUID(ClientVictimData.getVictim());

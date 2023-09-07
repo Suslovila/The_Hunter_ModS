@@ -1,4 +1,4 @@
-package com.way.suslovila.bagentity;
+package com.way.suslovila.entity.bag;
 
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;

@@ -1,4 +1,4 @@
-package com.way.suslovila.item.bag;
+package com.way.suslovila.testStuff;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;

@@ -6,13 +6,11 @@ import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow;
 import com.way.suslovila.entity.projectile.speedArrow.SpeedArrow;
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
-import com.way.suslovila.entity.shadowMonster.ShadowMonsterEntity;
-import com.way.suslovila.music.ModSounds;
+import com.way.suslovila.entity.EntityShadowMonster.ShadowMonsterEntity;
 import com.way.suslovila.particles.TailBlackParticles;
 import com.way.suslovila.savedData.DelayBeforeSpawningHunter;
 import com.way.suslovila.savedData.HuntersHP;
 import com.way.suslovila.savedData.SaveVictim;
-import com.way.suslovila.savedData.clientSynch.ClientVictimData;
 import com.way.suslovila.savedData.clientSynch.Messages;
 import com.way.suslovila.savedData.clientSynch.PacketSyncVictimToClient;
 import com.way.suslovila.sounds.MCSounds;
@@ -22,7 +20,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -56,7 +53,19 @@ import java.util.*;
 
 
 public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimationTickable {
+    //todo: remove idiotic task system with normal goals
+    //CAUTION! THIS MOB IS MADE BY MADNESS CODER (ME). IF YOU WANT TO SAVE YOUR MENTALITY, CLOSE THIS CLASS.
+    //BUT IF YOU ARE BRAVE ENOUGH, YOU ARE WELCOME
 
+
+    /*
+    INFO: hunter does not use normal goal system because:
+    1) the system does not have timers (I need them to control "actions" during animations)
+    2) it is difficult to make one goal to start right after another
+    3)* I do not want any other mods to add goals to Hunter, such as "frightened" goal or "under mind control" goal. Hunter is invulnerable!!
+
+    INSTEAD, Hunter uses task system (peace of bicycle).
+    */
     //max light amount Hunter can stand:
         public static final float maxLight = 0.26f;
         public static final int minDistanceToPlayer = 6;
@@ -74,7 +83,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
     private static final EntityDataAccessor<Integer> SHOOTPHASE4 = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 
     //private static final EntityDataAccessor<Integer> TIMER_FOR_FALLING = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
-    //private static final EntityDataAccessor<Integer> TIMER_FOR_VULNARABLE = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
+    //private static final EntityDataAccessor<Integer> TIMER_FOR_VULNERABLE = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 
     private static final EntityDataAccessor<Integer> TIMER_FOR_CONTROLLING_SHADOWS = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> TIMER_FOR_SHADOW_MONSTER = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
@@ -88,7 +97,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
         put("shootPhase3", SHOOTPHASE3);
         put("shootPhase4", SHOOTPHASE4);
         //put("falling",TIMER_FOR_FALLING);
-        //put("vulnarable",TIMER_FOR_VULNARABLE);
+        //put("vulnerable",TIMER_FOR_VULNERABLE);
         put("summonShadows",TIMER_FOR_SUMMONING_SHADOWS);
         put("controlShadows",TIMER_FOR_CONTROLLING_SHADOWS);
         put("shadowMonster", TIMER_FOR_SHADOW_MONSTER);
@@ -100,7 +109,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
         put("shootPhase3", 2.0);
         put("shootPhase4", 2.0);
         //put("falling",1.0);
-        //put("vulnarable",1.0);
+        //put("vulnerable",1.0);
         put("summonShadows",1.5);
         put("controlShadows",1.0);
         put("shadowMonster", 1.0);
@@ -149,7 +158,6 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
     public void baseTick() {
         super.baseTick();
         if (!level.isClientSide()) {
-            System.out.println(getActualTask());
             HuntersHP.get(this.level).changeHP(this.getHealth());
             //if there is no victim in world:
             if (SaveVictim.get(this.level).getVictim().equals("novictim") || (DelayBeforeSpawningHunter.get(level).getHunterDelay() - HunterTeleportFormEntity.lifeTime - 5 <= 0 && DelayBeforeSpawningHunter.get(level).getHunterDelay() > -1)) {
@@ -228,6 +236,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                     }
                                     //if it's time to shoot arrow:
                                     if (getEntityData().get(SHOOTPHASE4) == 3) {
+
                                         // calculations for choosing the position to summon arrow
                                         Vec3 vec31 = EntityAnchorArgument.Anchor.FEET.apply(this);
                                         Vec3 Ptarget = player.position();
@@ -243,7 +252,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                         double arrowYpos = vec31.y + 3.4 + 1.5 * Math.sin((float) (Math.atan2(dy, xz)) * 1.3f);
                                         Vec3 arrowPos = new Vec3(arrowXPos, arrowYpos, arrowZpos);
 
-                                        //depending on situation Hunter should decide if he needs to shoot destroying arrow:
+                                        //depending on situation Hunter should decide if he needs to shoot with destroying arrow:
                                         boolean isBadCondition = checkConditionForExplosionArrow(level,new BlockPos(arrowXPos, arrowYpos, arrowZpos), new BlockPos(player.position().x, player.getEyeY(), player.position().z));
 
                                         //if Hunter can see his victim
@@ -273,7 +282,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                     }
                                 }
                             //if player is too near to Hunter:
-                            if (player.distanceTo(this) < 6 && !isGrabbing()) {
+                            if (player.distanceTo(this) < minDistanceToPlayer && !isGrabbing()) {
                                 disappearInShadows();
                                 //some delay
                                 DelayBeforeSpawningHunter.get(level.getServer().overworld()).changeTime(HunterTeleportFormEntity.lifeTime + 5);
@@ -284,7 +293,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                     //creating particles around Hunter's hand if he uses shadow hands
                     if (Objects.equals(getActualTask(), "controlShadows")) {
                         double armLength = 0.3D + 1.5;
-                        //some simple vector stuff
+                        //some simple vector stuff (or not so simple)
                         if (this.cordsForShadowsHunter.size() < 6) {
                             double radius = random.nextDouble(0.15, 0.5);
                             Vec3 lookVectorNormal = this.getViewVector(0);
@@ -322,8 +331,7 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                                 }
                             }
                         }
-                    } else
-                        cordsForShadowsHunter.clear();
+                    } else cordsForShadowsHunter.clear();
 
                     if (!isVictimHere) {
                         this.disappearInShadows();
@@ -331,9 +339,8 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
 
                     }
 
-                System.out.println("Task before check: " + getActualTask());
 
-                //now we need to add time for current action and set to 0 all other timers, this is how Hunter task system works(yeap, instead of "Goals" system. I created bicycle
+                //now we need to add time for current action and set to 0 all other timers, this is how Hunter task system works
 
                 HashMap<String, EntityDataAccessor<Integer>> map = (HashMap<String, EntityDataAccessor<Integer>>) actionsMap.clone();
                 Iterator<String> iteratorForActions = map.keySet().iterator();
@@ -362,15 +369,16 @@ public class HunterEntity extends ShadowCreature implements IAnimatable, IAnimat
                 if (getActualTask().equals("shadowMonster") && getEntityData().get(TIMER_FOR_SHADOW_MONSTER) >= ShadowMonsterEntity.lifeTime)
                     setActualTask("controlShadows");
 
-                System.out.println("Task at the end: " + getActualTask());
-                //should we rotate Hunter's hands? (For example, while shooting)
                 setShouldRotateHandsForShooting(getActualTask().equals("shootPhase4") && getEntityData().get(SHOOTPHASE4) < 8);
 
+            }
+            if (getActualTask().equals("shadowMonster") && getEntityData().get(TIMER_FOR_SHADOW_MONSTER) == 2){
+                level.playSound(Minecraft.getInstance().player, this.getX(), this.getY(), this.getZ(), MCSounds.beastUnknownLanguage.get(), SoundSource.VOICE, 0.2f, 1.0f);
             }
         }
         else{
             if (getActualTask().equals("shadowMonster") && getEntityData().get(TIMER_FOR_SHADOW_MONSTER) == 2){
-                level.playSound(Minecraft.getInstance().player, this.getX(), this.getY(), this.getZ(), MCSounds.beastUnknownLanguage.get(), SoundSource.VOICE, 0.2f, 1.0f);
+                level.playSound(null, this.getX(), this.getY(), this.getZ(), MCSounds.beastUnknownLanguage.get(), SoundSource.VOICE, 0.2f, 1.0f);
             }
         }
     }
@@ -384,7 +392,7 @@ private boolean isShooting(){
     public boolean isGrabbing(){
         return getActualTask().equals("controlShadows") || getActualTask().equals("summonShadows") || getActualTask().equals("shadowMonster");
     }
-//does not take magic damage
+//Hunter does not take magic damage
 @Override
 public boolean hurt(DamageSource pSource, float pAmount) {
         //when attacked, Hunter will take damage or, with chance, hide in shadows:
@@ -438,7 +446,7 @@ getEntityData().define(ACTUAL_TASK, "prepareForShoot");
         getEntityData().define(SHOOTPHASE2, 0);
         getEntityData().define(SHOOTPHASE3, 0);
         getEntityData().define(SHOOTPHASE4, 0);
-       // getEntityData().define(TIMER_FOR_VULNARABLE, 0);
+       // getEntityData().define(TIMER_FOR_VULNERABLE, 0);
         getEntityData().define(TIMER_FOR_SHADOW_MONSTER, 0);
 
     }
@@ -548,9 +556,7 @@ getEntityData().define(ACTUAL_TASK, "prepareForShoot");
     public PushReaction getPistonPushReaction() {
         return PushReaction.IGNORE;
     }
-public static boolean doesHunterHaveVictimClient(Level level){
-        return (ClientVictimData.getVictim() != null) && (level.getPlayerByUUID(ClientVictimData.getVictim()) != null);
-}
+
 }
 
 

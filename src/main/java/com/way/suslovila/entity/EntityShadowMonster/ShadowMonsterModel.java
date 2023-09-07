@@ -1,4 +1,4 @@
-package com.way.suslovila.entity.shadowMonster;
+package com.way.suslovila.entity.EntityShadowMonster;
 
 import com.way.suslovila.MysticalCreatures;
 import net.minecraft.resources.ResourceLocation;

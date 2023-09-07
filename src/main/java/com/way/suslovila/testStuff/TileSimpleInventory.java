@@ -1,7 +1,6 @@
-package com.way.suslovila.item.bag;
+package com.way.suslovila.testStuff;
 
 import com.google.common.base.Preconditions;
-import com.way.suslovila.item.bag.TileMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;

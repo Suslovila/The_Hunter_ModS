@@ -1,7 +1,7 @@
 package com.way.suslovila.event;
 
 import com.way.suslovila.entity.shadowGrabEntity.ShadowGrabEntity;
-import com.way.suslovila.entity.shadowMonster.ShadowMonsterEntity;
+import com.way.suslovila.entity.EntityShadowMonster.ShadowMonsterEntity;
 import com.way.suslovila.particles.*;
 import com.way.suslovila.MysticalCreatures;
 import com.way.suslovila.entity.ModEntityTypes;

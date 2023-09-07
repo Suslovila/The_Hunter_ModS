@@ -1,4 +1,4 @@
-package com.way.suslovila.bagentity;
+package com.way.suslovila.entity.bag;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;

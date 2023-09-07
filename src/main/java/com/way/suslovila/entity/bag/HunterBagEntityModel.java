@@ -1,4 +1,4 @@
-package com.way.suslovila.bagentity;
+package com.way.suslovila.entity.bag;
 
 import com.way.suslovila.MysticalCreatures;
 import net.minecraft.resources.ResourceLocation;

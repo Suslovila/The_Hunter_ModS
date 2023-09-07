@@ -2,9 +2,10 @@
 package com.way.suslovila.events;
 
 import com.way.suslovila.MysticalCreatures;
-import com.way.suslovila.bagentity.BagProvider;
-import com.way.suslovila.bagentity.HunterBagEntity;
-import com.way.suslovila.bagentity.HunterBagEntityItemsStorage;
+import com.way.suslovila.entity.EntityShadowMonster.ShadowMonsterEntity;
+import com.way.suslovila.entity.bag.BagProvider;
+import com.way.suslovila.entity.bag.HunterBagEntity;
+import com.way.suslovila.entity.bag.HunterBagEntityItemsStorage;
 import com.way.suslovila.capability.EntityCapabilityProvider;
 import com.way.suslovila.capability.EntityCapabilityStorage;
 import com.way.suslovila.effects.ModEffects;
@@ -17,14 +18,12 @@ import com.way.suslovila.entity.hunter.appearance.HunterAppearanceFormEntity;
 import com.way.suslovila.entity.hunter.teleport.HunterTeleportFormEntity;
 import com.way.suslovila.entity.trap.TrapEntity;
 import com.way.suslovila.item.RainyAuraTalisman.RainyAuraTalismanItem;
-import com.way.suslovila.music.ModSounds;
 import com.way.suslovila.savedData.*;
 import com.way.suslovila.savedData.clientSynch.ClientVictimData;
 import com.way.suslovila.savedData.clientSynch.MessageIsVictim;
 import com.way.suslovila.savedData.clientSynch.MessageWaterShield;
 import com.way.suslovila.savedData.clientSynch.Messages;
-import com.way.suslovila.simplybackpacks.inventory.BackpackData;
-import com.way.suslovila.simplybackpacks.items.BackpackItem;
+
 import com.way.suslovila.sounds.HuntThemePlayer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -47,7 +46,6 @@ import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
@@ -64,7 +62,6 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.*;
 import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -72,6 +69,7 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.*;
 
 import static com.way.suslovila.entity.projectile.explosionArrow.ExplosionArrow.random;
+import static com.way.suslovila.item.bag.ItemHunterBag.putItemsInBackpackFromHunterStorage;
 import static net.minecraft.world.entity.Entity.RemovalReason.DISCARDED;
 
 @Mod.EventBusSubscriber(modid = MysticalCreatures.MOD_ID)
@@ -263,7 +261,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void IfHunterBagSpawnsEvent(EntityJoinWorldEvent event) {
-        if(!event.getEntity().level.isClientSide() && event.getEntity() instanceof LivingEntity)
+
             //Messages.sendWaterShield(new MessageWaterShield(((LivingEntity)event.getEntity()).hasEffect(ModEffects.WATER_SHIELD.get()), ((LivingEntity)event.getEntity()).getId()), ((LivingEntity)event.getEntity()));
 
         if (!event.getEntity().level.isClientSide()) {
@@ -271,36 +269,10 @@ public class ModEvents {
                 event.getEntity().setNoGravity(false);
                 System.out.println("No gravity");
                 HunterBagEntity bagEntity = (HunterBagEntity) event.getEntity();
-                Item item = MysticalCreatures.COMMONBACKPACK.get();
-                ItemStack itemStack = item.getDefaultInstance();
-                ItemStack copyOf = itemStack;
-                itemStack = putItemsToBackpack(copyOf, bagEntity.level);
-                ItemStack finalItemStack = itemStack;
-
-
-                BackpackData data = BackpackItem.getData(finalItemStack);
-                UUID uuid = data.getUuid();
-                System.out.println(uuid);
-                ArrayList<ItemStack> itemsToPutInBag = new ArrayList<>();
-                int size = 18;
-                //this.stacks = NonNullList.withSize(size, ItemStack.EMPTY);
-                Random random = new Random();
-                for (int i = 0; i < size; i++) {
-                    List<ItemStack> itemsInBag = HunterBagData.get(bagEntity.level).getItemsInBag();
-                    int sizeOfBag = itemsInBag.size();
-                    if (sizeOfBag != 0) {
-                        int number = random.nextInt(3);
-                        if (number == 2) {
-                            int index = random.nextInt(sizeOfBag);
-                            ItemStack currentItem = itemsInBag.get(index);
-                            //this.stacks.set(i, item);
-                            itemsToPutInBag.add(currentItem);
-                            HunterBagData.get(bagEntity.level).removeItemFromBag(itemsInBag.get(index));
-                        }
-                    }
-                }
+                ItemStack itemStack = MysticalCreatures.COMMONBACKPACK.get().getDefaultInstance();
+                putItemsInBackpackFromHunterStorage(itemStack, bagEntity.level);
                 bagEntity.getCapability(BagProvider.BAG).ifPresent(items -> {
-                    items.setBag(itemsToPutInBag);
+                    items.setBag(itemStack);
                 });
             }
         }
@@ -460,31 +432,26 @@ public class ModEvents {
                                 entity.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1200, 0));
                                 entity.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 1200, 1));
                             }
-//                                        if (level.getBlockState(checkPos).getBlock() == Blocks.SOUL_CAMPFIRE || level.getBlockState(checkPos).getBlock() == Blocks.CAMPFIRE) {
-//                                            if (level.getBlockState(checkPos).getValue(BlockStateProperties.LIT)) {
-//                                                event.setCanceled(true);
-//                                                entity.teleportTo(x, y + 1, z);
-//                                                level.getBlockState(checkPos).setValue(BlockStateProperties.LIT, false);
-//                                                entity.setHealth(entity.getMaxHealth());
-//                                                flag = false;
-//                                                entity.removeAllEffects();
-//                                                entity.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 1200, 4));
-//                                                entity.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1200, 0));
-//                                                entity.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 1200, 1));
-//
-//
-//                                            }
-//                                        }
-
                         }
                     }
-
-
                 }
             }
         }
     }
 
+    @SubscribeEvent
+    public static void putItemsToHunterBagOnPlayerDeath(LivingDeathEvent event) {
+
+    }
+    @SubscribeEvent
+    public static void spawnHunterBagOnHunterDeath(LivingDeathEvent event) {
+        Level world = event.getEntityLiving().level;
+        if(!world.isClientSide && event.getEntityLiving() instanceof HunterEntity){
+            HunterBagEntity shadowMonster = new HunterBagEntity(ModEntityTypes.HUNTER_BAG.get(), world);
+            shadowMonster.setPos(event.getEntityLiving().position());
+            world.addFreshEntity(shadowMonster);
+        }
+    }
     @SubscribeEvent
     public static void Hunt(TickEvent.WorldTickEvent event) {
         //handling hunt theme music
@@ -561,12 +528,7 @@ public class ModEvents {
         event.register(EntityCapabilityStorage.class);
     }
 
-    public static ItemStack putItemsToBackpack(ItemStack backpack, Level level) {
-        BackpackData data = BackpackItem.getData(backpack);
-        assert data != null;
-        data.putItemsInBackpackFromHunterStorage(level);
-        return backpack;
-    }
+
 
     @SubscribeEvent
     public static void clearRainyAuraCAPA(PotionEvent.PotionRemoveEvent event) {
